@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D Desk AI — Employee Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:#04060f; --bg-mid:#080d1e;
+    --neon-blue:#00d4ff; --neon-green:#00ff88; --neon-red:#ff4466;
+    --text-bright:#e8f4ff; --text-dim:#6a8aaa;
+    --border-glow:rgba(0,212,255,0.2); --glass-bg:rgba(8,15,35,0.7);
+    --card-bg:rgba(10,18,42,0.8);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Exo 2',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+  /* Top nav */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0.8rem 1.8rem;
+    background:rgba(4,8,20,0.9);
+    border-bottom:1px solid var(--border-glow);
+    backdrop-filter:blur(20px);
+    z-index:50; position:relative;
+    flex-shrink:0;
+  }
+  .topbar-brand{display:flex;align-items:center;gap:0.8rem;}
+  .topbar-brand svg{width:28px;height:28px;}
+  .topbar-title{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--neon-blue);}
+  .topbar-right{display:flex;align-items:center;gap:1.5rem;}
+  .user-badge{
+    display:flex;align-items:center;gap:0.6rem;
+    background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);
+    border-radius:30px;padding:0.4rem 1rem;font-size:0.75rem;
+    font-family:'Share Tech Mono',monospace;color:var(--neon-blue);
+  }
+  .user-dot{width:7px;height:7px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 6px var(--neon-green);animation:pulse-dot 2s infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+  .btn-logout{background:none;border:1px solid rgba(255,68,102,0.3);color:rgba(255,68,102,0.7);padding:0.35rem 0.9rem;border-radius:6px;font-size:0.7rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
+  .btn-logout:hover{border-color:#ff4466;color:#ff4466;}
+
+  /* Layout */
+  .main-layout{display:flex;flex:1;overflow:hidden;}
+
+  /* Sidebar */
+  .sidebar{
+    width:240px;flex-shrink:0;
+    background:rgba(4,8,20,0.8);
+    border-right:1px solid var(--border-glow);
+    padding:1.5rem 1rem;
+    display:flex;flex-direction:column;gap:0.4rem;
+    overflow-y:auto;
+  }
+  .sidebar-section{font-size:0.6rem;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;padding:0.8rem 0.5rem 0.4rem;margin-top:0.5rem;}
+  .sidebar-item{
+    display:flex;align-items:center;gap:0.8rem;
+    padding:0.65rem 0.8rem;border-radius:10px;cursor:pointer;
+    font-size:0.8rem;transition:all 0.2s;color:var(--text-dim);
+    border:1px solid transparent;
+    text-decoration:none;
+  }
+  .sidebar-item:hover,.sidebar-item.active{background:rgba(0,212,255,0.08);color:var(--neon-blue);border-color:rgba(0,212,255,0.15);}
+  .sidebar-item .icon{font-size:1rem;width:22px;text-align:center;}
+  .ticket-badge{
+    margin-left:auto;background:rgba(0,212,255,0.15);color:var(--neon-blue);
+    font-size:0.6rem;padding:0.15rem 0.5rem;border-radius:10px;font-family:'Share Tech Mono',monospace;
+  }
+
+  /* My Tickets panel */
+  .tickets-mini{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border-glow);}
+  .tickets-mini-title{font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;margin-bottom:0.8rem;}
+  .mini-ticket{
+    background:rgba(10,18,42,0.6);border:1px solid rgba(255,255,255,0.06);
+    border-radius:8px;padding:0.6rem 0.8rem;margin-bottom:0.5rem;font-size:0.72rem;
+  }
+  .mini-ticket-id{color:var(--neon-blue);font-family:'Share Tech Mono',monospace;font-size:0.65rem;}
+  .mini-ticket-title{color:var(--text-bright);margin:0.2rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mini-ticket-reply{
+    margin-top:0.45rem;padding-top:0.45rem;border-top:1px solid rgba(255,255,255,0.05);
+    font-size:0.68rem;line-height:1.55;color:var(--text-dim);
+  }
+  .mini-ticket-reply strong{color:var(--neon-green);font-size:0.6rem;letter-spacing:0.08em;font-family:'Share Tech Mono',monospace;}
+  .reply-mini{
+    background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.14);
+    border-radius:8px;padding:0.65rem 0.8rem;margin-bottom:0.55rem;
+  }
+  .reply-mini-ticket{font-size:0.64rem;color:var(--neon-green);font-family:'Share Tech Mono',monospace;margin-bottom:0.3rem;}
+  .reply-mini-text{font-size:0.72rem;line-height:1.55;color:var(--text-bright);}
+  .reply-mini-time{margin-top:0.35rem;font-size:0.6rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .status-pill{
+    display:inline-block;font-size:0.58rem;padding:0.15rem 0.5rem;border-radius:8px;font-family:'Share Tech Mono',monospace;
+  }
+  .status-open{background:rgba(0,212,255,0.1);color:var(--neon-blue);}
+  .status-progress{background:rgba(255,165,0,0.1);color:#ffa500;}
+  .status-resolved{background:rgba(0,255,136,0.1);color:var(--neon-green);}
+
+  /* ── MY TICKETS MODAL ── */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+    background:rgba(4,6,18,0.85);backdrop-filter:blur(14px);padding:1rem;
+  }
+  .modal-overlay.active{display:flex;}
+  .modal-box{
+    width:min(680px,calc(100vw - 2rem));max-height:calc(100vh - 3rem);
+    background:rgba(8,16,38,0.97);border:1px solid var(--border-glow);
+    border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,0.6);overflow:hidden;
+    display:flex;flex-direction:column;animation:modal-appear 0.35s ease;
+  }
+  @keyframes modal-appear{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+  .modal-header{
+    display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.5rem;
+    border-bottom:1px solid var(--border-glow);flex-shrink:0;
+  }
+  .modal-title{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.12em;color:var(--neon-blue);}
+  .modal-close{
+    width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,68,102,0.25);
+    background:rgba(255,68,102,0.08);color:var(--neon-red);font-size:1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+  }
+  .modal-close:hover{background:rgba(255,68,102,0.18);}
+  .modal-body{flex:1;overflow-y:auto;padding:1.2rem 1.5rem;display:flex;flex-direction:column;gap:1rem;
+    scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+  .modal-body::-webkit-scrollbar{width:4px;}
+  .modal-body::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:2px;}
+  .modal-empty{color:var(--text-dim);font-size:0.8rem;text-align:center;padding:2rem 1rem;}
+
+  /* Ticket card inside modal */
+  .tk-card{
+    background:rgba(10,18,42,0.75);border:1px solid rgba(255,255,255,0.07);
+    border-radius:14px;padding:1rem 1.2rem;cursor:pointer;transition:all 0.25s;
+  }
+  .tk-card:hover{border-color:rgba(0,212,255,0.25);background:rgba(0,212,255,0.04);transform:translateY(-1px);}
+  .tk-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;}
+  .tk-card-id{font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--neon-blue);}
+  .tk-card-date{font-size:0.62rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .tk-card-desc{font-size:0.8rem;color:var(--text-bright);line-height:1.5;margin-bottom:0.6rem;}
+  .tk-card-desc.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tk-card-pills{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.8rem;}
+  .tk-detail-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1rem;margin-bottom:0.6rem;
+    padding:0.7rem 0.85rem;background:rgba(0,0,0,0.15);border-radius:10px;
+    border:1px solid rgba(255,255,255,0.04);
+  }
+  .tk-detail-label{font-size:0.56rem;letter-spacing:0.1em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+  .tk-detail-value{font-size:0.76rem;color:var(--text-bright);margin-top:0.1rem;}
+  .tk-detail-full{grid-column:1/-1;}
+
+  /* ── TICKET BROWSER TABS ── */
+  .browser-tabs{display:flex; border-bottom:1px solid var(--border-glow); padding:0 1.5rem; background:rgba(4,8,20,0.6);}
+  .browser-tab{padding:0.8rem 1.2rem; cursor:pointer; font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:0.08em; color:var(--text-dim); border-bottom:2px solid transparent; transition:all 0.2s;}
+  .browser-tab:hover{color:var(--text-bright);}
+  .browser-tab.active{color:var(--neon-blue); border-bottom-color:var(--neon-blue);}
+
+  /* ── REDDIT/QUORA STYLE POSTS ── */
+  .post-card{
+    background:var(--card-bg); border:1px solid var(--border-glow); border-radius:12px;
+    padding:1rem 1.2rem; margin-bottom:1rem; cursor:pointer; transition:all 0.2s;
+  }
+  .post-card:hover{border-color:rgba(0,212,255,0.4); transform:translateY(-2px); box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+  .post-meta{display:flex; align-items:center; gap:0.5rem; font-size:0.65rem; color:var(--text-dim); font-family:'Share Tech Mono',monospace; margin-bottom:0.6rem;}
+  .post-author{color:var(--neon-blue); font-weight:600;}
+  .post-title{font-size:0.9rem; font-weight:600; color:var(--text-bright); line-height:1.4; margin-bottom:0.5rem;}
+  .post-tags{display:flex; gap:0.4rem; margin-bottom:0.8rem;}
+  .post-footer{display:flex; align-items:center; gap:1rem; font-size:0.7rem; color:var(--text-dim); font-family:'Share Tech Mono',monospace;}
+  .post-action{display:flex; align-items:center; gap:0.3rem; padding:0.3rem 0.6rem; background:rgba(255,255,255,0.05); border-radius:12px; transition:all 0.2s;}
+  .post-action:hover{background:rgba(255,255,255,0.1); color:var(--text-bright);}
+  .post-action.replies{color:var(--neon-green); background:rgba(0,255,136,0.08);}
+
+  /* ── ANIMATED STATUS TRACKER ── */
+  .tracker{display:flex;align-items:flex-start;gap:0;position:relative;padding:0.5rem 0;}
+  .tracker-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;}
+  .tracker-dot{
+    width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:0.7rem;font-weight:700;border:2px solid rgba(255,255,255,0.12);
+    background:rgba(10,18,42,0.9);color:var(--text-dim);transition:all 0.4s ease;
+    position:relative;z-index:2;
+  }
+  .tracker-step.done .tracker-dot{
+    border-color:var(--neon-green);color:var(--neon-green);
+    background:rgba(0,255,136,0.12);box-shadow:0 0 12px rgba(0,255,136,0.3);
+  }
+  .tracker-step.active .tracker-dot{
+    border-color:var(--neon-blue);color:var(--neon-blue);
+    background:rgba(0,212,255,0.15);box-shadow:0 0 16px rgba(0,212,255,0.4);
+    animation:tracker-pulse 1.8s ease infinite;
+  }
+  @keyframes tracker-pulse{0%,100%{box-shadow:0 0 12px rgba(0,212,255,0.3)}50%{box-shadow:0 0 24px rgba(0,212,255,0.6)}}
+  .tracker-label{
+    margin-top:0.4rem;font-size:0.58rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;
+    text-align:center;letter-spacing:0.05em;line-height:1.3;max-width:80px;
+  }
+  .tracker-step.done .tracker-label{color:var(--neon-green);}
+  .tracker-step.active .tracker-label{color:var(--neon-blue);font-weight:600;}
+  .tracker-line{
+    position:absolute;top:14px;left:0;right:0;height:2px;z-index:1;
+    background:rgba(255,255,255,0.06);
+  }
+  .tracker-line-fill{
+    height:100%;background:linear-gradient(90deg,var(--neon-green),var(--neon-blue));
+    transition:width 0.6s cubic-bezier(0.23,1,0.32,1);
+    box-shadow:0 0 8px rgba(0,255,136,0.3);
+  }
+
+  /* Chat Area */
+  .chat-area{
+    flex:1;display:grid;grid-template-columns:minmax(0,1fr) 390px;
+    background:var(--bg-deep);
+    position:relative;overflow:hidden;
+  }
+  .assistant-section{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+  .ticket-chat-panel{
+    border-left:1px solid var(--border-glow);
+    background:rgba(4,8,20,0.82);
+    display:flex;flex-direction:column;min-width:0;overflow:hidden;
+  }
+  .ticket-chat-header{
+    padding:1rem 1rem 0.85rem;border-bottom:1px solid var(--border-glow);
+    display:flex;align-items:flex-start;justify-content:space-between;gap:0.8rem;flex-shrink:0;
+  }
+  .ticket-chat-title{font-family:'Orbitron',sans-serif;font-size:0.74rem;letter-spacing:0.1em;color:var(--neon-green);}
+  .ticket-chat-sub{font-size:0.68rem;color:var(--text-dim);line-height:1.5;margin-top:0.25rem;}
+  .ticket-chat-refresh{
+    border:1px solid rgba(0,255,136,0.22);background:rgba(0,255,136,0.07);
+    color:var(--neon-green);border-radius:8px;padding:0.35rem 0.55rem;
+    font-family:'Share Tech Mono',monospace;font-size:0.62rem;cursor:pointer;white-space:nowrap;
+  }
+  .ticket-chat-list{display:flex;gap:0.45rem;overflow-x:auto;padding:0.75rem 0.85rem;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;}
+  .ticket-chat-tab{
+    border:1px solid rgba(255,255,255,0.08);background:rgba(10,18,42,0.72);
+    color:var(--text-dim);border-radius:8px;padding:0.45rem 0.65rem;cursor:pointer;
+    min-width:116px;font-size:0.68rem;line-height:1.35;
+  }
+  .ticket-chat-tab.active{border-color:rgba(0,255,136,0.32);color:var(--neon-green);background:rgba(0,255,136,0.08);}
+  .ticket-chat-meta{padding:0.8rem 1rem;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.72rem;color:var(--text-dim);line-height:1.6;}
+  .ticket-chat-thread{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:0.75rem;scroll-behavior:smooth;}
+  .ticket-chat-empty{color:var(--text-dim);font-size:0.76rem;line-height:1.6;border:1px dashed rgba(255,255,255,0.08);border-radius:10px;padding:0.9rem;}
+  .ticket-chat-message{max-width:88%;padding:0.72rem 0.82rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);}
+  .ticket-chat-message.employee{align-self:flex-end;background:rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.15);}
+  .ticket-chat-message.tech,.ticket-chat-message.technician{align-self:flex-start;background:rgba(0,255,136,0.06);border-color:rgba(0,255,136,0.14);}
+  .ticket-chat-author{display:flex;justify-content:space-between;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.35rem;font-size:0.64rem;font-family:'Share Tech Mono',monospace;color:var(--text-dim);}
+  .ticket-chat-text{font-size:0.8rem;line-height:1.6;color:var(--text-bright);}
+  .ticket-chat-composer{
+    padding:0.85rem 1rem;border-top:1px solid var(--border-glow);
+    display:flex;flex-direction:column;gap:0.65rem;flex-shrink:0;
+    min-height:fit-content;
+  }
+  .ticket-chat-input{width:100%;min-height:60px;max-height:120px;resize:vertical;background:rgba(10,18,42,0.8);border:1px solid var(--border-glow);border-radius:10px;color:var(--text-bright);padding:0.75rem 0.85rem;font-family:'Exo 2',sans-serif;font-size:0.8rem;outline:none;}
+  .ticket-chat-input:focus{border-color:var(--neon-green);}
+  .ticket-chat-bottom-row{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;flex-shrink:0;min-height:36px;}
+  .ticket-chat-send{padding:0.52rem 0.95rem;border-radius:8px;border:1px solid rgba(0,255,136,0.32);background:rgba(0,255,136,0.09);color:var(--neon-green);font-family:'Orbitron',sans-serif;font-size:0.64rem;font-weight:700;letter-spacing:0.08em;cursor:pointer;flex-shrink:0;white-space:nowrap;}
+  .ticket-chat-send:disabled{opacity:0.45;cursor:not-allowed;}
+  .ticket-chat-status{font-size:0.68rem;color:var(--text-dim);line-height:1.4;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+
+  /* Chat header */
+  .chat-header{
+    padding:1rem 1.5rem;
+    background:rgba(4,8,20,0.6);
+    border-bottom:1px solid var(--border-glow);
+    display:flex;align-items:center;gap:1rem;
+    flex-shrink:0;
+  }
+  .ai-avatar{
+    width:40px;height:40px;border-radius:12px;
+    background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(0,255,136,0.1));
+    border:1px solid rgba(0,212,255,0.3);
+    display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+    position:relative;
+  }
+  .ai-status{position:absolute;bottom:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 6px var(--neon-green);}
+  .chat-header-info h3{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.08em;}
+  .chat-header-info p{font-size:0.7rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .chat-header-right{margin-left:auto;display:flex;gap:0.8rem;}
+  .header-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.4rem 0.8rem;font-size:0.7rem;color:var(--text-dim);cursor:pointer;transition:all 0.2s;font-family:'Share Tech Mono',monospace;}
+  .header-btn:hover{border-color:var(--neon-blue);color:var(--neon-blue);}
+
+  /* Messages */
+  .messages{
+    flex:1;overflow-y:auto;padding:1.5rem;
+    display:flex;flex-direction:column;gap:1.2rem;
+    scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;
+  }
+  .messages::-webkit-scrollbar{width:4px;}
+  .messages::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:2px;}
+
+  .msg{display:flex;gap:0.8rem;max-width:75%;animation:fade-up 0.3s ease;}
+  @keyframes fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .msg.ai{align-self:flex-start;}
+  .msg.user{align-self:flex-end;flex-direction:row-reverse;}
+
+  .msg-avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+  .msg.ai .msg-avatar{background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(0,255,136,0.1));border:1px solid rgba(0,212,255,0.25);}
+  .msg.user .msg-avatar{background:rgba(123,79,255,0.15);border:1px solid rgba(123,79,255,0.25);}
+
+  .msg-bubble{
+    padding:0.85rem 1.1rem;border-radius:16px;
+    font-size:0.85rem;line-height:1.65;
+    position:relative;
+  }
+  .msg.ai .msg-bubble{
+    background:var(--card-bg);
+    border:1px solid var(--border-glow);
+    border-top-left-radius:4px;
+  }
+  .msg.user .msg-bubble{
+    background:linear-gradient(135deg,rgba(0,100,180,0.3),rgba(123,79,255,0.2));
+    border:1px solid rgba(123,79,255,0.25);
+    border-top-right-radius:4px;
+  }
+  .msg-time{font-size:0.6rem;color:var(--text-dim);margin-top:0.4rem;font-family:'Share Tech Mono',monospace;padding:0 0.3rem;}
+  .msg.user .msg-time{text-align:right;}
+
+  /* AI Suggestion Card */
+  .suggestion-card{
+    background:rgba(0,255,136,0.04);
+    border:1px solid rgba(0,255,136,0.25);
+    border-radius:14px;padding:1rem 1.2rem;margin-top:0.5rem;
+  }
+  .suggestion-card h4{font-size:0.75rem;font-family:'Orbitron',sans-serif;color:var(--neon-green);letter-spacing:0.08em;margin-bottom:0.6rem;}
+  .suggestion-card p{font-size:0.8rem;color:var(--text-bright);line-height:1.6;}
+  .suggestion-actions{display:flex;gap:0.6rem;margin-top:0.8rem;}
+  .sugg-btn{
+    padding:0.4rem 0.9rem;border-radius:8px;font-size:0.7rem;cursor:pointer;
+    font-family:'Orbitron',sans-serif;font-weight:600;letter-spacing:0.08em;transition:all 0.2s;border:1px solid;
+  }
+  .sugg-btn.yes{background:rgba(0,255,136,0.1);color:var(--neon-green);border-color:rgba(0,255,136,0.3);}
+  .sugg-btn.yes:hover{background:rgba(0,255,136,0.2);}
+  .sugg-btn.no{background:rgba(255,68,102,0.08);color:#ff6680;border-color:rgba(255,68,102,0.25);}
+  .sugg-btn.no:hover{background:rgba(255,68,102,0.15);}
+
+  /* Ticket created card */
+  .ticket-card{
+    background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.25);
+    border-radius:14px;padding:1rem 1.2rem;margin-top:0.5rem;
+  }
+  .ticket-card h4{font-size:0.72rem;font-family:'Orbitron',sans-serif;color:var(--neon-blue);letter-spacing:0.08em;margin-bottom:0.8rem;}
+  .ticket-fields{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+  .ticket-field label{font-size:0.6rem;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+  .ticket-field p{font-size:0.8rem;color:var(--text-bright);}
+  .priority-high{color:#ff6b35!important;}
+  .priority-medium{color:#ffa500!important;}
+  .priority-low{color:var(--neon-green)!important;}
+
+  /* Typing indicator */
+  .typing-indicator{display:flex;align-items:center;gap:0.4rem;padding:0.6rem 0.8rem;}
+  .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--neon-blue);animation:typing-bounce 1.2s ease infinite;}
+  .typing-dot:nth-child(2){animation-delay:0.2s;}
+  .typing-dot:nth-child(3){animation-delay:0.4s;}
+  @keyframes typing-bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+  .typing-label{font-size:0.7rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+
+  /* Input area */
+  .input-area{
+    padding:1rem 1.5rem 1.2rem;
+    background:rgba(4,8,20,0.8);
+    border-top:1px solid var(--border-glow);
+    flex-shrink:0;
+  }
+  .quick-chips{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem;}
+  .chip{
+    padding:0.3rem 0.75rem;border-radius:20px;font-size:0.68rem;cursor:pointer;
+    background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);
+    color:var(--text-dim);transition:all 0.2s;white-space:nowrap;
+  }
+  .chip:hover{background:rgba(0,212,255,0.12);color:var(--neon-blue);border-color:rgba(0,212,255,0.3);}
+  .utility-row{display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;margin-bottom:0.9rem;}
+  .location-input{
+    min-width:220px;flex:1;
+    padding:0.52rem 0.9rem;border-radius:20px;
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+    color:var(--text-bright);font-family:'Exo 2',sans-serif;font-size:0.74rem;outline:none;
+  }
+  .location-input:focus{border-color:var(--neon-blue);}
+  .location-input::placeholder{color:var(--text-dim);}
+  .upload-chip{
+    display:inline-flex;align-items:center;gap:0.45rem;
+    padding:0.38rem 0.9rem;border-radius:20px;cursor:pointer;
+    background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.18);
+    color:var(--neon-green);font-size:0.68rem;transition:all 0.2s;
+  }
+  .upload-chip:hover{background:rgba(0,255,136,0.14);border-color:rgba(0,255,136,0.35);}
+  .upload-filename{font-size:0.7rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .image-card{
+    background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.22);
+    border-radius:14px;padding:1rem 1.1rem;margin-top:0.6rem;
+  }
+  .image-card h4{font-size:0.72rem;font-family:'Orbitron',sans-serif;color:var(--neon-blue);letter-spacing:0.08em;margin-bottom:0.7rem;}
+  .image-meta{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;margin-bottom:0.7rem;}
+  .image-actions{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.8rem;}
+  .image-select{
+    width:100%;padding:0.7rem 0.9rem;margin-top:0.65rem;
+    background:rgba(10,18,42,0.8);border:1px solid var(--border-glow);border-radius:10px;
+    color:var(--text-bright);font-family:'Exo 2',sans-serif;font-size:0.82rem;outline:none;
+  }
+  .image-select:focus{border-color:var(--neon-blue);}
+  .ghost-btn{
+    padding:0.42rem 0.9rem;border-radius:8px;font-size:0.68rem;cursor:pointer;
+    font-family:'Orbitron',sans-serif;font-weight:600;letter-spacing:0.08em;
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:var(--text-dim);
+  }
+  .ghost-btn:hover{border-color:var(--neon-blue);color:var(--neon-blue);}
+  .input-row{display:flex;gap:0.8rem;align-items:flex-end;}
+  .msg-input{
+    flex:1;padding:0.85rem 1.1rem;
+    background:rgba(10,18,42,0.8);
+    border:1px solid var(--border-glow);border-radius:14px;
+    color:var(--text-bright);font-family:'Exo 2',sans-serif;font-size:0.88rem;
+    outline:none;transition:border-color 0.2s;resize:none;min-height:48px;max-height:120px;
+    scrollbar-width:none;
+  }
+  .msg-input:focus{border-color:var(--neon-blue);}
+  .msg-input::placeholder{color:var(--text-dim);}
+  .send-btn{
+    width:48px;height:48px;border-radius:12px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,rgba(0,212,255,0.25),rgba(0,255,136,0.15));
+    border:1px solid rgba(0,212,255,0.4);color:var(--neon-blue);
+    font-size:1.1rem;transition:all 0.2s;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .send-btn:hover{background:rgba(0,212,255,0.3);box-shadow:0 0 20px rgba(0,212,255,0.25);}
+  .send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* Scanlines */
+  .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);}
+  .powered-footer{
+    position:fixed;right:16px;bottom:12px;z-index:80;
+    font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;
+    color:rgba(232,244,255,0.5);font-family:'Share Tech Mono',monospace;
+    background:rgba(4,8,20,0.72);border:1px solid rgba(255,255,255,0.08);
+    padding:0.3rem 0.65rem;border-radius:999px;backdrop-filter:blur(10px);
+  }
+  @media (max-width: 1080px){
+    .chat-area{grid-template-columns:1fr;}
+    .ticket-chat-panel{border-left:none;border-top:1px solid var(--border-glow);min-height:42vh;}
+  }
+
+  /* ═══ COMMUNITY SUGGESTIONS ═══ */
+  .community-section{
+    background:rgba(8,14,32,0.9);border:1px solid rgba(0,212,255,0.2);
+    border-radius:14px;padding:1.1rem 1.3rem;margin-top:1rem;
+    box-shadow:0 0 20px rgba(0,212,255,0.06);
+  }
+  .community-header{
+    display:flex;align-items:center;justify-content:space-between;gap:0.8rem;
+    margin-bottom:1rem;padding-bottom:0.7rem;border-bottom:1px solid rgba(0,212,255,0.12);
+  }
+  .community-title{
+    font-family:'Orbitron',sans-serif;font-size:0.72rem;font-weight:700;
+    letter-spacing:0.12em;color:var(--neon-blue);display:flex;align-items:center;gap:0.5rem;
+  }
+  .community-title .dot{width:6px;height:6px;border-radius:50%;background:var(--neon-blue);box-shadow:0 0 6px var(--neon-blue);}
+  .community-count{
+    font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);
+    background:rgba(0,212,255,0.08);padding:0.2rem 0.5rem;border-radius:10px;
+  }
+  .community-ai-summary{
+    background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.18);
+    border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;
+    font-size:0.78rem;line-height:1.6;color:var(--text-bright);
+  }
+  .community-ai-summary .ai-label{
+    font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--neon-green);
+    letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;
+  }
+  .community-ai-btn{
+    padding:0.35rem 0.7rem;border-radius:6px;font-size:0.6rem;cursor:pointer;
+    background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);
+    color:var(--neon-green);font-family:'Share Tech Mono',monospace;transition:all 0.2s;
+  }
+  .community-ai-btn:hover{background:rgba(0,255,136,0.15);}
+  .comment-list{display:flex;flex-direction:column;gap:0.7rem;}
+  .comment-empty{color:var(--text-dim);font-size:0.76rem;text-align:center;padding:1.5rem 1rem;border:1px dashed rgba(255,255,255,0.08);border-radius:10px;}
+  .comment-card{
+    background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;padding:0.85rem 1rem;transition:all 0.2s;
+  }
+  .comment-card:hover{border-color:rgba(0,212,255,0.15);}
+  .comment-card.verified{
+    border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.04);
+    box-shadow:0 0 12px rgba(0,255,136,0.08);
+  }
+  .comment-card.pinned{border-color:rgba(255,170,0,0.3);background:rgba(255,170,0,0.04);}
+  .comment-card.reply-card{margin-left:1.8rem;border-left:2px solid rgba(0,212,255,0.15);}
+  .comment-meta{
+    display:flex;align-items:center;justify-content:space-between;gap:0.6rem;
+    margin-bottom:0.4rem;flex-wrap:wrap;
+  }
+  .comment-author{font-size:0.78rem;font-weight:600;color:var(--text-bright);}
+  .comment-badges{display:flex;gap:0.35rem;align-items:center;}
+  .badge-verified{
+    display:inline-flex;align-items:center;gap:0.25rem;padding:0.12rem 0.5rem;
+    border-radius:20px;background:rgba(0,255,136,0.12);color:var(--neon-green);
+    font-size:0.55rem;font-family:'Share Tech Mono',monospace;letter-spacing:0.08em;
+    animation:glow-pulse 2s ease infinite;
+  }
+  @keyframes glow-pulse{0%,100%{box-shadow:0 0 4px rgba(0,255,136,0.2)}50%{box-shadow:0 0 12px rgba(0,255,136,0.4)}}
+  .badge-pinned{
+    display:inline-flex;align-items:center;gap:0.2rem;padding:0.12rem 0.45rem;
+    border-radius:20px;background:rgba(255,170,0,0.1);color:#ffaa00;
+    font-size:0.55rem;font-family:'Share Tech Mono',monospace;
+  }
+  .comment-time{font-size:0.6rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .comment-text{font-size:0.8rem;line-height:1.65;color:var(--text-bright);margin-bottom:0.5rem;}
+  .comment-actions{
+    display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;
+  }
+  .vote-btn{
+    display:inline-flex;align-items:center;gap:0.3rem;padding:0.25rem 0.6rem;
+    border-radius:8px;font-size:0.65rem;cursor:pointer;
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+    color:var(--text-dim);font-family:'Share Tech Mono',monospace;transition:all 0.2s;
+  }
+  .vote-btn:hover{background:rgba(0,212,255,0.1);color:var(--neon-blue);border-color:rgba(0,212,255,0.25);}
+  .vote-btn.voted{background:rgba(0,212,255,0.1);color:var(--neon-blue);border-color:rgba(0,212,255,0.3);}
+  .reply-btn{
+    font-size:0.62rem;color:var(--text-dim);cursor:pointer;padding:0.2rem 0.4rem;
+    font-family:'Share Tech Mono',monospace;transition:color 0.2s;
+  }
+  .reply-btn:hover{color:var(--neon-blue);}
+  .comment-composer{
+    margin-top:0.8rem;display:flex;flex-direction:column;gap:0.6rem;
+    padding-top:0.8rem;border-top:1px solid rgba(255,255,255,0.06);
+  }
+  .comment-textarea{
+    width:100%;min-height:70px;max-height:140px;resize:vertical;
+    background:rgba(0,0,0,0.25);border:1px solid rgba(0,212,255,0.12);
+    border-radius:10px;color:var(--text-bright);padding:0.7rem 0.85rem;
+    font-family:'Exo 2',sans-serif;font-size:0.8rem;outline:none;
+  }
+  .comment-textarea:focus{border-color:var(--neon-blue);}
+  .comment-submit-row{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;}
+  .comment-submit{
+    padding:0.45rem 0.9rem;border-radius:8px;border:1px solid rgba(0,212,255,0.3);
+    background:rgba(0,212,255,0.1);color:var(--neon-blue);
+    font-family:'Orbitron',sans-serif;font-size:0.62rem;font-weight:700;
+    letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;flex-shrink:0;
+  }
+  .comment-submit:hover{background:rgba(0,212,255,0.2);box-shadow:0 0 12px rgba(0,212,255,0.2);}
+  .comment-submit:disabled{opacity:0.4;cursor:not-allowed;}
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <svg viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="8" stroke="#00d4ff" stroke-width="1.2" stroke-dasharray="3 2"/>
+      <circle cx="14" cy="14" r="3" fill="#00d4ff" opacity="0.8"/>
+      <line x1="14" y1="6" x2="14" y2="11" stroke="#00ff88" stroke-width="1.2"/>
+      <line x1="6" y1="14" x2="11" y2="14" stroke="#00d4ff" stroke-width="1.2"/>
+    </svg>
+    <div class="topbar-title">D Desk AI</div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-badge"><div class="user-dot"></div><span id="user-name">EMP001</span></div>
+    <button class="btn-logout" onclick="window.location='index.html'">LOGOUT</button>
+  </div>
+</div>
+
+<div class="main-layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <a class="sidebar-item active" href="#" onclick="event.preventDefault(); setSidebarItem(this); focusComposer();">
+      <span class="icon">💬</span> New Ticket
+    </a>
+    <a class="sidebar-item" href="#" onclick="event.preventDefault(); setSidebarItem(this); viewTickets('my');">
+      <span class="icon">📋</span> My Tickets <span class="ticket-badge" id="open-count">0</span>
+    </a>
+    <a class="sidebar-item" href="#" onclick="event.preventDefault(); setSidebarItem(this); viewTickets('company');">
+      <span class="icon">🌍</span> Company Tickets
+    </a>
+    <a class="sidebar-item" href="#" onclick="event.preventDefault(); setSidebarItem(this); trackLatestTicket();">
+      <span class="icon">🔍</span> Track Status
+    </a>
+    <!-- Recent tickets -->
+    <div class="tickets-mini">
+      <div class="tickets-mini-title">Recent Tickets</div>
+      <div id="recent-tickets"></div>
+      <div class="tickets-mini-title" style="margin-top:1rem;">Support Replies</div>
+      <div id="recent-replies"></div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-area">
+    <div class="assistant-section">
+    <div class="chat-header">
+      <div class="ai-avatar">🤖<div class="ai-status"></div></div>
+      <div class="chat-header-info">
+        <h3>D Desk AI Assistant</h3>
+        <p>Powered by Groq / LLaMA 3.1 — Always learning</p>
+      </div>
+      <div class="chat-header-right">
+        <button class="header-btn" onclick="clearChat()">Clear AI</button>
+        <button class="header-btn" onclick="viewTickets()">My Tickets</button>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <!-- Welcome message -->
+      <div class="msg ai">
+        <div class="msg-avatar">🤖</div>
+        <div>
+          <div class="msg-bubble">
+            Hello! I'm <strong>D Desk AI</strong>, your AI IT assistant. 👋<br><br>
+            I can help you with network issues, software problems, hardware faults, printer errors, and more. Just describe your problem naturally — I'll analyze it and either provide an instant fix or raise a support ticket for you.<br><br>
+            Please add your desk, floor, or location in the field below so technicians can route your ticket faster.<br><br>
+            What's the issue you're facing today?
+          </div>
+          <div class="msg-time">Just now</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="quick-chips">
+        <span class="chip" onclick="sendQuick('My internet is not working')">🌐 Internet Issue</span>
+        <span class="chip" onclick="sendQuick('My printer is not working')">🖨️ Printer Problem</span>
+        <span class="chip" onclick="sendQuick('Software is crashing / not opening')">💻 Software Crash</span>
+        <span class="chip" onclick="sendQuick('VPN is not connecting')">🔒 VPN Issue</span>
+        <span class="chip" onclick="sendQuick('My laptop is very slow')">⚡ Slow PC</span>
+        <span class="chip" onclick="sendQuick('Email is not working')">📧 Email Issue</span>
+      </div>
+      <div class="utility-row">
+        <label class="upload-chip" for="image-input">🖼️ Analyze Device Image</label>
+        <span class="upload-filename" id="image-file-name">No image selected</span>
+        <input type="file" id="image-input" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleImageUpload(event)">
+        <input class="location-input" id="ticket-location" placeholder="Desk / Floor / Location for ticket routing" />
+      </div>
+      <div class="input-row">
+        <textarea class="msg-input" id="user-input" placeholder="Describe your IT issue in plain language…" rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+    </div>
+    <aside class="ticket-chat-panel" aria-label="Technician ticket chat">
+      <div class="ticket-chat-header">
+        <div>
+          <div class="ticket-chat-title">TECHNICIAN CHAT</div>
+          <div class="ticket-chat-sub">Ticket-specific messages with your assigned technician only.</div>
+        </div>
+        <button class="ticket-chat-refresh" onclick="refreshActiveTicketChat()">Refresh</button>
+      </div>
+      <div class="ticket-chat-list" id="ticket-chat-list"></div>
+      <div class="ticket-chat-meta" id="ticket-chat-meta">Create or select a ticket to start a technician conversation.</div>
+      <div class="ticket-chat-thread" id="ticket-chat-thread">
+        <div class="ticket-chat-empty">No ticket selected. AI troubleshooting stays on the left; technician chat appears here after a ticket exists.</div>
+      </div>
+      <div class="ticket-chat-composer">
+        <textarea class="ticket-chat-input" id="ticket-chat-input" placeholder="Message the assigned technician..." disabled></textarea>
+        <div class="ticket-chat-bottom-row">
+          <div class="ticket-chat-status" id="ticket-chat-status"></div>
+          <button class="ticket-chat-send" id="ticket-chat-send" onclick="sendEmployeeTicketReply()" disabled>Send Message</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- SIMILARITY MODAL -->
+<div class="modal-overlay" id="similarity-modal" style="z-index: 300;" onclick="if(event.target===this)closeSimilarityModal()">
+  <div class="modal-box" style="width: min(800px, calc(100vw - 2rem));">
+    <div class="modal-header">
+      <div class="modal-title">SIMILAR ISSUES DETECTED</div>
+      <button class="modal-close" onclick="closeSimilarityModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.5rem;">We found previously resolved tickets that might help you fix this immediately.</p>
+      <div id="similarity-results" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+      
+      <div style="display:flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1rem; border-top: 1px solid var(--border-glow); padding-top: 1rem;">
+        <button class="sugg-btn yes" onclick="closeSimilarityModal()">Ignore & Try Fix</button>
+        <button class="sugg-btn no" onclick="proceedTicketCreation()">Continue Creating Ticket</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKET BROWSER MODAL -->
+<div class="modal-overlay" id="my-tickets-modal" onclick="if(event.target===this)closeTicketsModal()">
+  <div class="modal-box" style="width:min(760px, calc(100vw - 2rem));">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title-text">TICKET BROWSER</div>
+      <button class="modal-close" onclick="closeTicketsModal()">&times;</button>
+    </div>
+    <div class="browser-tabs">
+      <div class="browser-tab active" id="tab-my-tickets" onclick="switchBrowserTab('my')">My Tickets</div>
+      <div class="browser-tab" id="tab-company-tickets" onclick="switchBrowserTab('company')">Company Board</div>
+    </div>
+    <div class="modal-body" id="my-tickets-body" style="background:var(--bg-deep);">
+      <div class="modal-empty">Loading tickets...</div>
+    </div>
+  </div>
+</div>
+
+<div class="powered-footer">Powered by Daivik Software Solutions</div>
+
+<script>
+const currentRole = sessionStorage.getItem('nd_role');
+if(currentRole !== 'employee') {
+  window.location = 'index.html';
+}
+
+const employeeId = sessionStorage.getItem('nd_user') || 'emp001';
+const employeeName = sessionStorage.getItem('nd_name') || employeeId.toUpperCase();
+const employeeDept = sessionStorage.getItem('nd_dept') || '';
+document.getElementById('user-name').textContent = employeeName.toUpperCase();
+document.getElementById('ticket-location').value = employeeDept;
+
+let awaitingFixConfirmation = false;
+let pendingDraft = null;
+let pendingImageReview = null;
+let myTickets = [];
+let activeTicketId = null;
+const VALID_IMAGE_LABELS = [
+  'screen_damage',
+  'screen_good',
+  'keyboard_issue',
+  'keyboard_good',
+  'mouse_issue',
+  'mouse_good',
+  'printer',
+  'battery',
+  'cable_issue',
+  'overheating_issue',
+  'other',
+];
+
+const messagesEl = document.getElementById('messages');
+const initialMessages = messagesEl.innerHTML;
+let employeeChatHistory = [];
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function scrollBottom() {
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function now() {
+  return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+function formatDate(value) {
+  if(!value) return 'N/A';
+  let raw = String(value);
+  // Server stores UTC without 'Z'; append it so the browser converts to local PC time
+  if(!raw.endsWith('Z') && !raw.includes('+') && !raw.includes('-', 10)) raw += 'Z';
+  const date = new Date(raw);
+  if(Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString();
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function nl2br(value) {
+  return escapeHtml(value).replace(/\n/g, '<br>');
+}
+
+function currentTicketLocation() {
+  return document.getElementById('ticket-location').value.trim();
+}
+
+function normalizeStatus(status) {
+  return status === 'in_progress' ? 'progress' : (status || 'open');
+}
+
+function statusClass(status) {
+  const normalized = normalizeStatus(status);
+  if(normalized === 'resolved') return 'status-resolved';
+  if(normalized === 'progress') return 'status-progress';
+  return 'status-open';
+}
+
+function statusLabel(status) {
+  const normalized = normalizeStatus(status);
+  if(normalized === 'progress') return 'In Progress';
+  if(normalized === 'resolved') return 'Resolved';
+  if(normalized === 'closed') return 'Closed';
+  return 'Open';
+}
+
+function setSidebarItem(activeEl) {
+  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+  if(activeEl) activeEl.classList.add('active');
+}
+
+function focusComposer() {
+  document.getElementById('user-input').focus();
+}
+
+function addMessage(role, content) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const avatar = role === 'ai' ? '🤖' : '👤';
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div>
+      <div class="msg-bubble">${content}</div>
+      <div class="msg-time">${now()}</div>
+    </div>`;
+  messagesEl.appendChild(div);
+  scrollBottom();
+}
+
+function showTyping(label='AI is analyzing...') {
+  hideTyping();
+  const div = document.createElement('div');
+  div.id = 'typing';
+  div.className = 'msg ai';
+  div.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="typing-indicator">
+      <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      <span class="typing-label">${escapeHtml(label)}</span>
+    </div>`;
+  messagesEl.appendChild(div);
+  scrollBottom();
+}
+
+function hideTyping() {
+  const typing = document.getElementById('typing');
+  if(typing) typing.remove();
+}
+
+async function apiJson(url, options={}) {
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { detail: text || 'Unexpected response from server.' };
+  }
+  if(!response.ok) {
+    let errMessage = `Request failed (${response.status})`;
+    if (typeof data.detail === 'string') {
+      errMessage = data.detail;
+    } else if (data.detail && typeof data.detail === 'object') {
+      if (data.detail.error && data.detail.reason) {
+        errMessage = `${data.detail.error} (Reason: ${data.detail.reason})`;
+      } else if (data.detail.error) {
+        errMessage = data.detail.error;
+      } else if (Array.isArray(data.detail)) {
+        errMessage = data.detail.map(d => d.msg || d.error || JSON.stringify(d)).join('; ');
+      } else {
+        errMessage = data.detail.reason || data.detail.message || JSON.stringify(data.detail);
+      }
+    } else if (data.error) {
+      errMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+    } else if (data.message) {
+      errMessage = data.message;
+    }
+    throw new Error(errMessage);
+  }
+  return data;
+}
+
+function renderRecentTickets(tickets) {
+  const container = document.getElementById('recent-tickets');
+  const repliesContainer = document.getElementById('recent-replies');
+  const openCount = tickets.filter(ticket => !['resolved', 'closed'].includes(normalizeStatus(ticket.status))).length;
+  document.getElementById('open-count').textContent = String(openCount);
+
+  if(!tickets.length) {
+    container.innerHTML = `<div style="font-size:0.72rem;color:var(--text-dim);line-height:1.6;">No tickets yet. Submit an issue and it will appear here in real time.</div>`;
+    repliesContainer.innerHTML = `<div style="font-size:0.72rem;color:var(--text-dim);line-height:1.6;">No technician replies yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = tickets.slice(0, 3).map(ticket => `
+    <div class="mini-ticket">
+      <div class="mini-ticket-id">#${escapeHtml(ticket.ticket_id)}</div>
+      <div class="mini-ticket-title">${escapeHtml(ticket.description)}</div>
+      <span class="status-pill ${statusClass(ticket.status)}">${statusLabel(ticket.status)}</span>
+      ${latestTechnicianReply(ticket) ? `
+        <div class="mini-ticket-reply">
+          <strong>LATEST SUPPORT REPLY</strong><br>
+          ${escapeHtml(replyPreview(latestTechnicianReply(ticket).message || '', 90))}
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+
+  const replyCards = tickets
+    .map(ticket => ({ ticket, reply: latestTechnicianReply(ticket) }))
+    .filter(item => item.reply)
+    .slice(0, 3);
+
+  repliesContainer.innerHTML = replyCards.length
+    ? replyCards.map(({ ticket, reply }) => `
+        <div class="reply-mini">
+          <div class="reply-mini-ticket">#${escapeHtml(ticket.ticket_id)} · ${escapeHtml(statusLabel(ticket.status))}</div>
+          <div class="reply-mini-text">${escapeHtml(replyPreview(reply.message || '', 110))}</div>
+          <div class="reply-mini-time">${escapeHtml(formatDate(reply.created_at))}</div>
+        </div>
+      `).join('')
+    : `<div style="font-size:0.72rem;color:var(--text-dim);line-height:1.6;">No technician replies yet. New updates will show here automatically.</div>`;
+}
+
+function renderTicketChatPanel(tickets) {
+  const list = document.getElementById('ticket-chat-list');
+  const meta = document.getElementById('ticket-chat-meta');
+  const thread = document.getElementById('ticket-chat-thread');
+  const input = document.getElementById('ticket-chat-input');
+  const sendBtn = document.getElementById('ticket-chat-send');
+  const status = document.getElementById('ticket-chat-status');
+
+  if(!tickets.length) {
+    activeTicketId = null;
+    list.innerHTML = '';
+    meta.textContent = 'Create a ticket to start a technician conversation.';
+    thread.innerHTML = `<div class="ticket-chat-empty">No ticket selected. AI troubleshooting stays separate from technician chat.</div>`;
+    input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+    status.textContent = '';
+    return;
+  }
+
+  if(!activeTicketId || !tickets.some(ticket => ticket.ticket_id === activeTicketId)) {
+    const activeTicket = tickets.find(ticket => !['resolved', 'closed'].includes(normalizeStatus(ticket.status))) || tickets[0];
+    activeTicketId = activeTicket.ticket_id;
+  }
+
+  list.innerHTML = tickets.slice(0, 10).map(ticket => `
+    <button class="ticket-chat-tab ${ticket.ticket_id === activeTicketId ? 'active' : ''}" onclick="openTicketChat('${escapeHtml(ticket.ticket_id)}')">
+      <strong>#${escapeHtml(ticket.ticket_id)}</strong><br>
+      ${escapeHtml(statusLabel(ticket.status))} · ${escapeHtml(ticket.assigned_to || 'Queue')}
+    </button>
+  `).join('');
+
+  renderActiveTicketChat(tickets);
+}
+
+function renderActiveTicketChat(allTickets) {
+  const ticket = allTickets.find(item => item.ticket_id === activeTicketId);
+  const meta = document.getElementById('ticket-chat-meta');
+  const thread = document.getElementById('ticket-chat-thread');
+  const input = document.getElementById('ticket-chat-input');
+  const sendBtn = document.getElementById('ticket-chat-send');
+  const status = document.getElementById('ticket-chat-status');
+
+  if(!ticket) {
+    meta.textContent = 'Select a ticket to view its conversation.';
+    thread.innerHTML = `<div class="ticket-chat-empty">No ticket selected.</div>`;
+    input.disabled = true;
+    sendBtn.disabled = true;
+    return;
+  }
+
+  const ticketClosed = ['resolved', 'closed'].includes(normalizeStatus(ticket.status));
+  meta.innerHTML = `
+    <strong style="color:var(--neon-blue)">#${escapeHtml(ticket.ticket_id)}</strong> ·
+    ${escapeHtml(ticket.category || 'Other')} · ${escapeHtml(statusLabel(ticket.status))}<br>
+    Assigned: <strong style="color:var(--neon-green)">${escapeHtml(ticket.assigned_to || 'Waiting for assignment')}</strong>
+    ${ticket.predicted_issue ? `<br>AI issue: ${escapeHtml(humanizeImageLabel(ticket.predicted_issue))} (${escapeHtml(Math.round((ticket.prediction_confidence || 0) * 100))}%)` : ''}
+  `;
+
+  const replies = (Array.isArray(ticket.replies) ? ticket.replies : [])
+    .filter(reply => ['employee', 'tech', 'technician'].includes(String(reply.author_role || '').toLowerCase()));
+  if(!replies.length) {
+    thread.innerHTML = `<div class="ticket-chat-empty">No messages yet. This thread is only for you and the assigned technician.</div>`;
+  } else {
+    thread.innerHTML = replies.map(reply => {
+      const role = String(reply.author_role || '').toLowerCase();
+      const messageClass = role === 'employee' ? 'employee' : 'tech';
+      return `
+        <div class="ticket-chat-message ${messageClass}">
+          <div class="ticket-chat-author">
+            <span>${escapeHtml(reply.author_name || reply.author_username || (messageClass === 'employee' ? 'You' : 'Technician'))}</span>
+            <span>${escapeHtml(formatDate(reply.created_at))}</span>
+          </div>
+          <div class="ticket-chat-text">${nl2br(reply.message || '')}</div>
+        </div>
+      `;
+    }).join('');
+  }
+  thread.scrollTop = thread.scrollHeight;
+  input.disabled = ticketClosed;
+  sendBtn.disabled = ticketClosed;
+  input.placeholder = ticketClosed ? 'This ticket is closed.' : 'Message the assigned technician...';
+  status.textContent = ticketClosed ? 'Ticket is closed. Chat is read-only.' : '';
+}
+
+function openTicketChat(ticketId) {
+  activeTicketId = ticketId;
+  const allKnown = [...myTickets, ...(typeof companyTickets !== 'undefined' ? companyTickets : [])];
+  renderTicketChatPanel(allKnown);
+}
+
+async function loadMyTickets() {
+  try {
+    myTickets = await apiJson(`/api/tickets?employee_id=${encodeURIComponent(employeeId)}&limit=20&include_replies=true`);
+    renderRecentTickets(myTickets);
+    // Render ticket chat panel using both myTickets and companyTickets if activeTicketId is from companyTickets
+    const allKnown = [...myTickets, ...(typeof companyTickets !== 'undefined' ? companyTickets : [])];
+    renderTicketChatPanel(allKnown);
+    return myTickets;
+  } catch (error) {
+    myTickets = [];
+    renderRecentTickets([]);
+    renderTicketChatPanel(typeof companyTickets !== 'undefined' ? companyTickets : []);
+    return [];
+  }
+}
+
+async function refreshActiveTicketChat(silent=false) {
+  const status = document.getElementById('ticket-chat-status');
+  if(!silent) status.textContent = 'Refreshing messages...';
+  await loadMyTickets();
+  if(!silent) status.textContent = activeTicketId ? 'Messages refreshed.' : '';
+}
+
+function latestTechnicianReply(ticket) {
+  const replies = Array.isArray(ticket?.replies) ? ticket.replies : [];
+  const techReplies = replies.filter(reply => ['tech', 'technician'].includes(String(reply.author_role || '').toLowerCase()));
+  return techReplies.length ? techReplies[techReplies.length - 1] : null;
+}
+
+function replyPreview(message, limit=110) {
+  const text = String(message || '').replace(/\s+/g, ' ').trim();
+  if(text.length <= limit) return text;
+  return `${text.slice(0, limit).trimEnd()}...`;
+}
+
+function sendQuick(text) {
+  document.getElementById('user-input').value = text;
+  sendMessage();
+}
+
+function humanizeImageLabel(label) {
+  const labels = {
+    screen_damage: 'Screen Damage',
+    screen_good: 'Screen Looks OK',
+    keyboard_issue: 'Keyboard Issue',
+    keyboard_good: 'Keyboard Looks OK',
+    mouse_issue: 'Mouse Issue',
+    mouse_good: 'Mouse Looks OK',
+    printer: 'Printer Issue',
+    battery: 'Battery Issue',
+    cable_issue: 'Cable Issue',
+    overheating_issue: 'Overheating Issue',
+    other: 'Other Device Issue',
+    unavailable: 'Model Unavailable',
+  };
+  return labels[label] || label.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function buildImageReviewMarkup(prediction, allowConfirm=true) {
+  const confidence = `${Math.round((prediction.confidence || 0) * 100)}%`;
+  const label = humanizeImageLabel(prediction.prediction);
+  const note = prediction.note ? `<p style="margin-top:0.5rem;color:var(--text-dim)">${nl2br(prediction.note)}</p>` : '';
+  const suggestions = Array.isArray(prediction.fix_suggestions) && prediction.fix_suggestions.length
+    ? prediction.fix_suggestions
+    : String(prediction.suggested_fix || '')
+        .split('\n')
+        .map(item => item.replace(/^-\s*/, '').trim())
+        .filter(Boolean);
+  const suggestionMarkup = suggestions.length
+    ? suggestions.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+    : '<li>Restart the device and check the connection.</li>';
+  const actions = allowConfirm ? `
+      <div class="image-actions">
+        <button class="ghost-btn" onclick="submitImageFeedback(true)">Save label</button>
+        <button class="ghost-btn" onclick="showImageCorrection()">Correct label</button>
+      </div>
+    ` : `
+      <div class="image-actions">
+        <button class="ghost-btn" onclick="showImageCorrection()">Label This Image</button>
+      </div>
+    `;
+
+  return `
+    <div class="image-card">
+      <h4>IMAGE DETECTION RESULT</h4>
+      <div class="image-meta">
+        <div class="ticket-field"><label>Prediction</label><p>${escapeHtml(label)}</p></div>
+        <div class="ticket-field"><label>Confidence</label><p>${escapeHtml(confidence)}</p></div>
+        <div class="ticket-field"><label>Model Source</label><p>${escapeHtml(prediction.model_source || 'local')}</p></div>
+        <div class="ticket-field"><label>Top Signal</label><p>${escapeHtml(prediction.top_prediction || label)}</p></div>
+      </div>
+      <div class="suggestion-card" style="margin-top:0.75rem;">
+        <h4>SUGGESTED FIX</h4>
+        <ul style="margin-left:1rem;font-size:0.8rem;line-height:1.7;">${suggestionMarkup}</ul>
+        <p style="margin-top:0.75rem;">Is the issue fixed?</p>
+        <div class="suggestion-actions">
+          <button class="sugg-btn yes" onclick="handleImageResolution(true)">Yes, issue fixed</button>
+          <button class="sugg-btn no" onclick="handleImageResolution(false)">No, create ticket</button>
+        </div>
+      </div>
+      ${note}
+      <p style="margin-top:0.8rem;color:var(--text-dim);font-size:0.78rem;">Optional: confirm the image label to improve future retraining.</p>
+      ${actions}
+    </div>
+  `;
+}
+
+async function handleImageUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+
+  document.getElementById('image-file-name').textContent = file.name;
+  showTyping('Running local image issue detection...');
+
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('created_by', employeeId);
+
+    const response = await fetch('/api/image-detect', {
+      method: 'POST',
+      body: form,
+    });
+    const text = await response.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { detail: text || 'Unexpected response from server.' };
+    }
+    if(!response.ok) {
+      throw new Error(data.detail || 'Image detection failed.');
+    }
+
+    pendingImageReview = data;
+    hideTyping();
+    addMessage('ai', buildImageReviewMarkup(data, VALID_IMAGE_LABELS.includes(data.prediction)));
+  } catch (error) {
+    hideTyping();
+    addMessage('ai', `I couldn't analyze that image right now.<br><br><strong>Error:</strong> ${escapeHtml(error.message)}`);
+  }
+}
+
+function showImageCorrection() {
+  if(!pendingImageReview) return;
+  addMessage('ai', `
+    <div class="image-card">
+      <h4>CONFIRM THE CORRECT LABEL</h4>
+      <p>Select the correct issue label so the image can be stored as training feedback.</p>
+      <select class="image-select" id="image-correct-label">
+        ${VALID_IMAGE_LABELS.map(label => `<option value="${label}">${humanizeImageLabel(label)}</option>`).join('')}
+      </select>
+      <div class="image-actions">
+        <button class="sugg-btn yes" onclick="submitImageFeedback(false)">Save Correct Label</button>
+      </div>
+    </div>
+  `);
+}
+
+async function submitImageFeedback(isCorrect) {
+  if(!pendingImageReview) return;
+
+  let correctLabel = null;
+  if(!isCorrect) {
+    const select = document.getElementById('image-correct-label');
+    correctLabel = select ? select.value : null;
+    if(!correctLabel) {
+      addMessage('ai', 'Please choose the correct label before saving the image feedback.');
+      return;
+    }
+  }
+
+  showTyping('Saving image feedback for future retraining...');
+
+  try {
+    const result = await apiJson('/api/image-feedback', {
+      method: 'POST',
+      body: JSON.stringify({
+        prediction_id: pendingImageReview.prediction_id,
+        is_correct: isCorrect,
+        correct_label: correctLabel,
+        confirmed_by: employeeId,
+      }),
+    });
+
+    hideTyping();
+    addMessage(
+      'ai',
+      `Image feedback saved as <strong style="color:var(--neon-green)">${escapeHtml(humanizeImageLabel(result.saved_label))}</strong>. You can still use the fixed/not fixed buttons on the detection card.`
+    );
+    pendingImageReview = {
+      ...pendingImageReview,
+      prediction: result.saved_label,
+      feedback_saved: true,
+    };
+  } catch (error) {
+    hideTyping();
+    addMessage('ai', `I couldn't save the image feedback.<br><br><strong>Error:</strong> ${escapeHtml(error.message)}`);
+  }
+}
+
+async function handleImageResolution(isFixed) {
+  if(!pendingImageReview) {
+    addMessage('ai', 'Please upload an image first so I can track this issue.');
+    return;
+  }
+
+  if(!isFixed && !currentTicketLocation()) {
+    addMessage('ai', 'Please add your desk, floor, or location in the location field below so I can route this ticket correctly.');
+    document.getElementById('ticket-location').focus();
+    return;
+  }
+
+  showTyping(isFixed ? 'Marking this image issue resolved...' : 'Creating ticket and assigning a technician...');
+
+  try {
+    const result = await apiJson('/api/image-resolution', {
+      method: 'POST',
+      body: JSON.stringify({
+        prediction_id: pendingImageReview.prediction_id,
+        is_fixed: isFixed,
+        employee_id: employeeId,
+        employee_name: employeeName,
+        location: currentTicketLocation(),
+        confirmed_by: employeeId,
+      }),
+    });
+
+    hideTyping();
+    if(isFixed) {
+      addMessage('ai', 'Great. I marked this image issue as resolved and did not create a ticket.');
+    } else {
+      const ticket = result.ticket || {};
+      addMessage('ai', `
+        The issue was not fixed, so I created a support ticket and routed it automatically.
+        <div class="ticket-card">
+          <h4>TICKET CREATED</h4>
+          <div class="ticket-fields">
+            <div class="ticket-field"><label>Ticket ID</label><p style="color:var(--neon-blue);font-family:'Share Tech Mono',monospace">#${escapeHtml(ticket.ticket_id || 'Pending')}</p></div>
+            <div class="ticket-field"><label>Detected Issue</label><p>${escapeHtml(humanizeImageLabel(ticket.predicted_issue || pendingImageReview.prediction))}</p></div>
+            <div class="ticket-field"><label>Confidence</label><p>${escapeHtml(Math.round((ticket.prediction_confidence || pendingImageReview.confidence || 0) * 100))}%</p></div>
+            <div class="ticket-field"><label>Status</label><p style="color:#ffa500">${escapeHtml(statusLabel(ticket.status))}</p></div>
+            <div class="ticket-field"><label>Assigned To</label><p>${escapeHtml(ticket.assigned_to || 'Queue')}</p></div>
+            <div class="ticket-field"><label>Specialization</label><p>${escapeHtml((ticket.technician_specialization || 'general').replace(/_/g, ' '))}</p></div>
+          </div>
+        </div>
+        You can open My Tickets to continue chatting with support on this ticket.
+      `);
+      await loadMyTickets();
+      if(ticket.ticket_id) openTicketChat(ticket.ticket_id);
+    }
+    pendingImageReview = null;
+    document.getElementById('image-file-name').textContent = 'No image selected';
+    document.getElementById('image-input').value = '';
+  } catch (error) {
+    hideTyping();
+    addMessage('ai', `I couldn't update the image workflow just now.<br><br><strong>Error:</strong> ${escapeHtml(error.message)}`);
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if(!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addMessage('user', escapeHtml(text));
+  document.getElementById('send-btn').disabled = true;
+
+  try {
+    if(awaitingFixConfirmation) {
+      if(/^(yes|fixed|resolved|worked|done|ok|yep|yeah|thank|thanks)\b/i.test(text)) {
+        await handleFix(true);
+        return;
+      } else if(/^(no|not yet|still|didn't|did not|nope|create ticket|raise ticket|open ticket)\b/i.test(text)) {
+        await handleFix(false);
+        return;
+      }
+      // Follow-up conversation or clarification: continue Groq AI chat flow!
+    }
+
+    showTyping('Groq AI is analyzing your issue...');
+
+    // Call the dedicated Groq-powered Chat API with full conversation context
+    const result = await apiJson('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        employee_id: employeeId,
+        employee_name: employeeName,
+        message: text,
+        conversation: employeeChatHistory,
+        location: currentTicketLocation(),
+      }),
+    });
+
+    hideTyping();
+
+    // Track multi-turn conversation history (keep last 12 messages)
+    employeeChatHistory.push({ role: 'user', content: text });
+    employeeChatHistory.push({ role: 'assistant', content: result.response });
+    if(employeeChatHistory.length > 12) {
+      employeeChatHistory = employeeChatHistory.slice(-12);
+    }
+
+    const isGroq = result.source === 'groq';
+    const isGenuineIssue = Boolean(result.is_it_issue || result.is_issue);
+
+    if(isGenuineIssue) {
+      // ── An actual IT problem was reported ──
+      pendingDraft = {
+        description: text,
+        category: result.category || 'Other',
+        priority: result.priority || 'Medium',
+        insight: result.response,
+      };
+      awaitingFixConfirmation = true;
+
+      const confidence = `${Math.round((result.confidence || 0.95) * 100)}%`;
+      const providerBadge = isGroq
+        ? `<span style="font-size:0.75rem; background:rgba(0,245,255,0.12); border:1px solid var(--neon-blue); border-radius:4px; padding:2px 7px; color:var(--neon-blue); font-weight:600;">⚡ ${escapeHtml(result.provider_label || 'Groq AI')}</span>`
+        : `<span style="font-size:0.75rem; background:rgba(255,165,0,0.12); border:1px solid #ffa500; border-radius:4px; padding:2px 7px; color:#ffa500; font-weight:600;">🛡️ Local Support Playbook (Fallback)</span>`;
+
+      addMessage('ai', `
+        <div style="margin-bottom:0.65rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          ${providerBadge}
+          <span style="font-size:0.8rem; color:var(--text-dim)">
+            Category: <strong style="color:var(--neon-blue)">${escapeHtml(result.category)}</strong> · 
+            Priority: <strong class="priority-${escapeHtml((result.priority || 'medium').toLowerCase())}">${escapeHtml(result.priority)}</strong> · 
+            Confidence: <strong style="color:var(--neon-green)">${confidence}</strong>
+          </span>
+        </div>
+        <div style="line-height:1.6; margin-bottom:0.85rem;">
+          ${nl2br(result.response)}
+        </div>
+        <div class="suggestion-card">
+          <h4>TROUBLESHOOTING ACTIONS</h4>
+          <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:0.6rem;">Try the steps above. If resolved, click Yes. Otherwise, click to submit a ticket for technician dispatch.</p>
+          <div class="suggestion-actions">
+            <button class="sugg-btn yes" onclick="handleFix(true)">✅ Yes, Issue Resolved</button>
+            <button class="sugg-btn no" onclick="handleFix(false)">🎫 Still Not Fixed — Create Ticket</button>
+          </div>
+        </div>
+      `);
+    } else {
+      // ── Conversational greeting or smalltalk (No fake ticket, no troubleshooting card) ──
+      pendingDraft = null;
+      awaitingFixConfirmation = false;
+
+      const providerBadge = isGroq
+        ? `<span style="font-size:0.75rem; background:rgba(0,245,255,0.12); border:1px solid var(--neon-blue); border-radius:4px; padding:2px 7px; color:var(--neon-blue); font-weight:600;">⚡ ${escapeHtml(result.provider_label || 'Groq AI')}</span>`
+        : '';
+
+      addMessage('ai', `
+        ${providerBadge ? `<div style="margin-bottom:0.5rem;">${providerBadge}</div>` : ''}
+        <div style="line-height:1.6;">
+          ${nl2br(result.response)}
+        </div>
+      `);
+    }
+  } catch (error) {
+    hideTyping();
+    addMessage('ai', `I couldn't reach the support service right now.<br><br><strong>Error:</strong> ${escapeHtml(error.message)}`);
+  } finally {
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+async function handleFix(worked) {
+  if(!pendingDraft) return;
+
+  const draft = pendingDraft;
+
+  if(worked) {
+    addMessage('ai', 'Great news. I have not opened a ticket, and we can leave this as self-resolved. If the issue returns, send me another message and I will reopen the flow.');
+    return;
+  }
+
+  const ticketLocation = currentTicketLocation();
+  if(!ticketLocation) {
+    awaitingFixConfirmation = true;
+    pendingDraft = draft;
+    addMessage('ai', 'Please add your desk, floor, or location in the location field below so I can route this ticket correctly.');
+    document.getElementById('ticket-location').focus();
+    return;
+  }
+
+  if (!draft._similarityChecked) {
+    showTyping('Checking for similar resolved issues...');
+    try {
+      const simRes = await apiJson('/api/tickets/similarity', {
+        method: 'POST',
+        body: JSON.stringify({ description: draft.description })
+      });
+      if (simRes.matches && simRes.matches.length > 0) {
+        hideTyping();
+        draft._similarityChecked = true;
+        pendingDraft = draft;
+        awaitingFixConfirmation = true;
+        showSimilarityModal(simRes.matches);
+        return;
+      }
+    } catch (e) {
+      console.error("Similarity check failed", e);
+    }
+  }
+
+  awaitingFixConfirmation = false;
+  pendingDraft = null;
+
+  showTyping('Creating a real helpdesk ticket...');
+  try {
+    const ticket = await apiJson('/api/tickets', {
+      method: 'POST',
+      body: JSON.stringify({
+        employee_id: employeeId,
+        employee_name: employeeName,
+        location: ticketLocation,
+        description: draft.description,
+        source: 'chat',
+      }),
+    });
+
+    hideTyping();
+    addMessage('ai', `
+      Your issue has been submitted to the live helpdesk queue.
+      <div class="ticket-card">
+        <h4>TICKET CREATED</h4>
+        <div class="ticket-fields">
+          <div class="ticket-field"><label>Ticket ID</label><p style="color:var(--neon-blue);font-family:'Share Tech Mono',monospace">#${escapeHtml(ticket.ticket_id)}</p></div>
+          <div class="ticket-field"><label>Category</label><p>${escapeHtml(ticket.category)}</p></div>
+          <div class="ticket-field"><label>Priority</label><p class="priority-${escapeHtml(ticket.priority.toLowerCase())}">${escapeHtml(ticket.priority)}</p></div>
+          <div class="ticket-field"><label>Status</label><p style="color:#ffa500">${escapeHtml(statusLabel(ticket.status))}</p></div>
+          <div class="ticket-field"><label>Location</label><p>${escapeHtml(ticket.location || ticketLocation)}</p></div>
+          <div class="ticket-field"><label>Assigned To</label><p>${escapeHtml(ticket.assigned_to || 'Queue')}</p></div>
+          <div class="ticket-field"><label>Specialization</label><p>${escapeHtml((ticket.technician_specialization || 'general').replace(/_/g, ' '))}</p></div>
+          <div class="ticket-field" style="grid-column:1/-1"><label>Description</label><p>${escapeHtml(draft.description)}</p></div>
+        </div>
+      </div>
+      ${ticket.is_duplicate ? `This looks similar to existing ticket <strong style="color:var(--neon-blue)">#${escapeHtml(ticket.duplicate_of || 'unknown')}</strong>, so the technicians will see that relationship too.<br><br>` : ''}
+      ${ticket.auto_fix ? `<strong>Technician note:</strong><br>${nl2br(ticket.auto_fix)}` : 'A technician will pick this up shortly.'}
+    `);
+    await loadMyTickets();
+    if(ticket.ticket_id) openTicketChat(ticket.ticket_id);
+  } catch (error) {
+    hideTyping();
+    addMessage('ai', `I couldn't create the live ticket just now.<br><br><strong>Error:</strong> ${escapeHtml(error.message)}`);
+  }
+}
+
+function clearChat() {
+  if(!confirm('Clear conversation history?')) return;
+  messagesEl.innerHTML = initialMessages;
+  employeeChatHistory = [];
+  awaitingFixConfirmation = false;
+  pendingDraft = null;
+  pendingImageReview = null;
+  document.getElementById('image-file-name').textContent = 'No image selected';
+  document.getElementById('image-input').value = '';
+}
+
+async function sendEmployeeTicketReply(ticketId=activeTicketId) {
+  const input = document.getElementById('ticket-chat-input');
+  const message = input ? input.value.trim() : '';
+  const status = document.getElementById('ticket-chat-status');
+  if(!ticketId) {
+    status.textContent = 'Select a ticket before sending a message.';
+    return;
+  }
+  if(!message) {
+    status.textContent = 'Please type a message before sending.';
+    return;
+  }
+
+  status.textContent = 'Sending message...';
+  try {
+    await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/replies`, {
+      method: 'POST',
+      body: JSON.stringify({
+        author_username: employeeId,
+        author_name: employeeName,
+        author_role: 'employee',
+        message,
+      }),
+    });
+    input.value = '';
+    status.textContent = 'Message sent.';
+    await loadMyTickets();
+  } catch (error) {
+    status.textContent = `Could not send message: ${error.message}`;
+  }
+}
+
+let modalMode = 'details'; // 'details' or 'track'
+
+function openTicketsModal(mode) {
+  modalMode = mode || 'details';
+  const modal = document.getElementById('my-tickets-modal');
+  const title = document.getElementById('modal-title-text');
+  title.textContent = modalMode === 'track' ? 'TRACK MY TICKETS' : 'MY TICKETS';
+  modal.classList.add('active');
+  renderTicketsModal();
+}
+
+function closeTicketsModal() {
+  document.getElementById('my-tickets-modal').classList.remove('active');
+}
+
+function getTrackerStage(ticket) {
+  const s = normalizeStatus(ticket.status);
+  if(s === 'resolved' || s === 'closed') return 3;
+  if(s === 'progress') return 2;
+  if(ticket.assigned_to) return 1;
+  return 0;
+}
+
+function trackerHTML(ticket) {
+  const stage = getTrackerStage(ticket);
+  const steps = [
+    {icon:'\ud83d\udcdd', label:'Submitted'},
+    {icon:'\ud83d\udc64', label:'Tech Assigned'},
+    {icon:'\ud83d\udd27', label:'Working'},
+    {icon:'\u2705', label:'Resolved'},
+  ];
+  const fillPct = stage === 0 ? 0 : Math.round((stage / (steps.length - 1)) * 100);
+
+  return `
+    <div class="tracker" style="position:relative;">
+      <div class="tracker-line"><div class="tracker-line-fill" style="width:${fillPct}%"></div></div>
+      ${steps.map((s, i) => {
+        const cls = i < stage ? 'done' : i === stage ? 'active' : '';
+        return `<div class="tracker-step ${cls}">
+          <div class="tracker-dot">${s.icon}</div>
+          <div class="tracker-label">${s.label}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function priorityColor(p) {
+  if(p === 'High') return 'var(--neon-red)';
+  if(p === 'Medium') return '#ffa500';
+  return 'var(--neon-green)';
+}
+
+function renderTicketsModal() {
+  const body = document.getElementById('my-tickets-body');
+  
+  if (currentBrowserTab === 'company') {
+    if(!companyTickets.length) {
+      body.innerHTML = `<div class="modal-empty">No company tickets found.</div>`;
+      return;
+    }
+    body.innerHTML = companyTickets.map(ticket => {
+      const author = ticket.employee_name || ticket.employee_id || 'Unknown';
+      const replyCount = (ticket.replies || []).filter(r => ['employee', 'tech', 'technician'].includes(String(r.author_role || '').toLowerCase())).length;
+      return `
+        <div class="post-card" onclick="openCompanyTicketDetail('${escapeHtml(ticket.ticket_id)}')">
+          <div class="post-meta">
+            <span class="post-author">${escapeHtml(author)}</span> • 
+            <span>${escapeHtml(formatDate(ticket.created_at))}</span> • 
+            <span style="color:${priorityColor(ticket.priority)};">${escapeHtml(ticket.priority)} Priority</span>
+          </div>
+          <div class="post-title">${escapeHtml(ticket.description)}</div>
+          <div class="post-tags">
+            <span class="status-pill status-open" style="background:rgba(255,255,255,0.05); color:var(--text-bright);">${escapeHtml(ticket.category || 'Other')}</span>
+            <span class="status-pill ${statusClass(ticket.status)}">${statusLabel(ticket.status)}</span>
+          </div>
+          <div class="post-footer">
+            <div class="post-action replies">
+              <span style="font-size:0.8rem;">💬</span> ${replyCount} ${replyCount === 1 ? 'Reply' : 'Replies'}
+            </div>
+            <div class="post-action" id="cc-count-${escapeHtml(ticket.ticket_id)}" style="color:var(--neon-blue);">
+              <span style="font-size:0.8rem;">🗨️</span> <span class="comm-count-val">…</span> Suggestions
+            </div>
+            ${ticket.assigned_to ? `<div class="post-action">🔧 Tech: ${escapeHtml(ticket.assigned_to)}</div>` : ''}
+            ${ticket.status === 'resolved' ? `<div class="post-action" style="color:var(--neon-green)">✅ Resolved</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    // Load community comment counts for each ticket
+    companyTickets.forEach(t => loadCommentCount(t.ticket_id));
+    return;
+  }
+
+  // MY TICKETS
+  if(!myTickets.length) {
+    body.innerHTML = `<div class="modal-empty">No tickets yet. Submit an issue through the chat and it will appear here.</div>`;
+    return;
+  }
+
+  if(modalMode === 'track') {
+    // TRACK MODE — compact cards with only the animated stepper
+    body.innerHTML = myTickets.map(ticket => `
+      <div class="tk-card" onclick="closeTicketsModal(); openTicketChat('${escapeHtml(ticket.ticket_id)}')">
+        <div class="tk-card-head">
+          <span class="tk-card-id">#${escapeHtml(ticket.ticket_id)}</span>
+          <span class="status-pill ${statusClass(ticket.status)}">${statusLabel(ticket.status)}</span>
+        </div>
+        <div class="tk-card-desc truncate">${escapeHtml(ticket.description)}</div>
+        ${trackerHTML(ticket)}
+      </div>
+    `).join('');
+  } else {
+    // DETAILS MODE — full ticket info, no tracker
+    body.innerHTML = myTickets.map(ticket => `
+      <div class="tk-card" onclick="closeTicketsModal(); openTicketChat('${escapeHtml(ticket.ticket_id)}')">
+        <div class="tk-card-head">
+          <span class="tk-card-id">#${escapeHtml(ticket.ticket_id)}</span>
+          <span class="tk-card-date">${escapeHtml(formatDate(ticket.created_at))}</span>
+        </div>
+        <div class="tk-card-desc">${escapeHtml(ticket.description)}</div>
+        <div class="tk-detail-grid">
+          <div>
+            <div class="tk-detail-label">Category</div>
+            <div class="tk-detail-value">${escapeHtml(ticket.category || 'Other')}</div>
+          </div>
+          <div>
+            <div class="tk-detail-label">Priority</div>
+            <div class="tk-detail-value" style="color:${priorityColor(ticket.priority)};font-weight:600">${escapeHtml(ticket.priority)}</div>
+          </div>
+          <div>
+            <div class="tk-detail-label">Status</div>
+            <div class="tk-detail-value"><span class="status-pill ${statusClass(ticket.status)}">${statusLabel(ticket.status)}</span></div>
+          </div>
+          <div>
+            <div class="tk-detail-label">Assigned To</div>
+            <div class="tk-detail-value">${escapeHtml(ticket.assigned_to || 'Waiting for assignment')}</div>
+          </div>
+          <div>
+            <div class="tk-detail-label">Location</div>
+            <div class="tk-detail-value">${escapeHtml(ticket.location || 'Not provided')}</div>
+          </div>
+          <div>
+            <div class="tk-detail-label">Source</div>
+            <div class="tk-detail-value">${escapeHtml((ticket.source || 'chat').toUpperCase())}</div>
+          </div>
+          ${ticket.predicted_issue ? `
+          <div>
+            <div class="tk-detail-label">AI Detected Issue</div>
+            <div class="tk-detail-value">${escapeHtml(ticket.predicted_issue.replace(/_/g, ' '))}</div>
+          </div>
+          <div>
+            <div class="tk-detail-label">AI Confidence</div>
+            <div class="tk-detail-value">${ticket.prediction_confidence != null ? Math.round(ticket.prediction_confidence * 100) + '%' : 'N/A'}</div>
+          </div>` : ''}
+          ${ticket.resolution ? `
+          <div class="tk-detail-full">
+            <div class="tk-detail-label">Resolution</div>
+            <div class="tk-detail-value" style="color:var(--neon-green)">${escapeHtml(ticket.resolution)}</div>
+          </div>` : ''}
+        </div>
+        <div class="tk-card-pills">
+          ${ticket.is_duplicate ? `<span class="status-pill" style="background:rgba(255,170,0,0.1);color:#ffa500">Duplicate of #${escapeHtml(ticket.duplicate_of || '?')}</span>` : ''}
+          ${ticket.auto_resolved ? `<span class="status-pill status-resolved">Auto-Resolved</span>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+let companyTickets = [];
+let currentBrowserTab = 'my';
+
+async function loadCompanyTickets() {
+  try {
+    companyTickets = await apiJson(`/api/tickets?limit=50&include_replies=true`);
+    return companyTickets;
+  } catch (error) {
+    companyTickets = [];
+    return [];
+  }
+}
+
+async function viewTickets(tab = 'my') {
+  currentBrowserTab = tab;
+  await loadMyTickets();
+  if (tab === 'company') {
+    await loadCompanyTickets();
+  }
+  
+  document.getElementById('tab-my-tickets').classList.toggle('active', tab === 'my');
+  document.getElementById('tab-company-tickets').classList.toggle('active', tab === 'company');
+  
+  openTicketsModal('details');
+}
+
+async function switchBrowserTab(tab) {
+  currentBrowserTab = tab;
+  document.getElementById('tab-my-tickets').classList.toggle('active', tab === 'my');
+  document.getElementById('tab-company-tickets').classList.toggle('active', tab === 'company');
+  document.getElementById('my-tickets-body').innerHTML = '<div class="modal-empty">Loading tickets...</div>';
+  
+  if (tab === 'company') {
+    await loadCompanyTickets();
+  } else {
+    await loadMyTickets();
+  }
+  
+  if (document.getElementById('my-tickets-modal').classList.contains('active')) {
+    renderTicketsModal();
+  }
+}
+
+async function trackLatestTicket() {
+  const tickets = await loadMyTickets();
+  if(!tickets.length) {
+    addMessage('ai', 'No live tickets found yet. Once you submit one, I can track it here.');
+    return;
+  }
+  openTicketsModal('track');
+}
+
+window.addEventListener('load', () => {
+  loadMyTickets();
+  focusComposer();
+  setInterval(() => {
+    if(activeTicketId) refreshActiveTicketChat(true);
+    if(document.getElementById('my-tickets-modal').classList.contains('active')) renderTicketsModal();
+  }, 10000);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+//  COMMUNITY DISCUSSION SYSTEM
+// ═══════════════════════════════════════════════════════════════════════
+
+let communityCache = {}; // ticketId -> {comments, summary}
+
+async function loadCommentCount(ticketId) {
+  try {
+    const data = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/comments`);
+    const el = document.querySelector(`#cc-count-${ticketId} .comm-count-val`);
+    if(el) el.textContent = data.count || 0;
+  } catch { /* ignore */ }
+}
+
+function openCompanyTicketDetail(ticketId) {
+  const ticket = companyTickets.find(t => t.ticket_id === ticketId);
+  if(!ticket) return;
+  
+  const body = document.getElementById('my-tickets-body');
+  const author = ticket.employee_name || ticket.employee_id || 'Unknown';
+  const techReplies = (ticket.replies || []).filter(r => ['employee','tech','technician'].includes(String(r.author_role||'').toLowerCase()));
+  
+  body.innerHTML = `
+    <div style="margin-bottom:0.6rem;">
+      <span class="reply-btn" onclick="switchBrowserTab('company')" style="color:var(--neon-blue);font-size:0.72rem;">← Back to Board</span>
+    </div>
+    
+    <div class="tk-card" style="cursor:default;">
+      <div class="tk-card-head">
+        <span class="tk-card-id">#${escapeHtml(ticket.ticket_id)}</span>
+        <span class="status-pill ${statusClass(ticket.status)}">${statusLabel(ticket.status)}</span>
+      </div>
+      <div class="tk-card-desc">${escapeHtml(ticket.description)}</div>
+      <div class="tk-detail-grid">
+        <div><div class="tk-detail-label">Category</div><div class="tk-detail-value">${escapeHtml(ticket.category||'Other')}</div></div>
+        <div><div class="tk-detail-label">Priority</div><div class="tk-detail-value" style="color:${priorityColor(ticket.priority)}">${escapeHtml(ticket.priority)}</div></div>
+        <div><div class="tk-detail-label">Raised By</div><div class="tk-detail-value">${escapeHtml(author)}</div></div>
+        <div><div class="tk-detail-label">Created</div><div class="tk-detail-value" style="color:var(--text-dim)">${escapeHtml(formatDate(ticket.created_at))}</div></div>
+        ${ticket.assigned_to ? `<div><div class="tk-detail-label">Assigned To</div><div class="tk-detail-value">${escapeHtml(ticket.assigned_to)}</div></div>` : ''}
+        ${ticket.location ? `<div><div class="tk-detail-label">Location</div><div class="tk-detail-value">${escapeHtml(ticket.location)}</div></div>` : ''}
+        ${ticket.resolution ? `<div class="tk-detail-full"><div class="tk-detail-label">Resolution</div><div class="tk-detail-value" style="color:var(--neon-green)">${escapeHtml(ticket.resolution)}</div></div>` : ''}
+      </div>
+    </div>
+    
+    ${ticket.auto_fix ? `
+    <div style="background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.18);border-radius:12px;padding:0.8rem 1rem;margin-top:0.6rem;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--neon-green);letter-spacing:0.12em;margin-bottom:0.4rem;">AI AUTO-FIX SUGGESTION</div>
+      <div style="font-size:0.78rem;line-height:1.6;">${nl2br(ticket.auto_fix)}</div>
+    </div>` : ''}
+    
+    ${techReplies.length ? `
+    <div style="margin-top:0.8rem;padding:0.8rem;background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.06);border-radius:12px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.64rem;letter-spacing:0.1em;color:#ff6b35;margin-bottom:0.6rem;">TECHNICIAN REPLIES</div>
+      ${techReplies.map(r => `
+        <div style="margin-bottom:0.6rem;padding:0.6rem 0.7rem;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.04);border-radius:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:0.64rem;font-family:'Share Tech Mono',monospace;color:var(--text-dim);margin-bottom:0.3rem;">
+            <span>${escapeHtml(r.author_name||r.author_username||'Unknown')} <span style="color:#ff6b35;font-size:0.55rem;">TECHNICIAN</span></span>
+            <span>${escapeHtml(formatDate(r.created_at))}</span>
+          </div>
+          <div style="font-size:0.78rem;line-height:1.6;">${nl2br(r.message||'')}</div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+    
+    <!-- COMMUNITY SUGGESTIONS -->
+    <div class="community-section" id="community-${escapeHtml(ticket.ticket_id)}">
+      <div class="community-header">
+        <div class="community-title"><div class="dot"></div>COMMUNITY SUGGESTIONS</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <span class="community-count" id="comm-count-${escapeHtml(ticket.ticket_id)}">Loading...</span>
+          <button class="community-ai-btn" onclick="loadAISummary('${escapeHtml(ticket.ticket_id)}')">🤖 AI Summary</button>
+        </div>
+      </div>
+      <div id="comm-ai-summary-${escapeHtml(ticket.ticket_id)}"></div>
+      <div class="comment-list" id="comm-list-${escapeHtml(ticket.ticket_id)}">
+        <div class="comment-empty">Loading community suggestions...</div>
+      </div>
+      <div class="comment-composer">
+        <textarea class="comment-textarea" id="comm-input-${escapeHtml(ticket.ticket_id)}" placeholder="Share a fix, tip, or suggestion to help other employees..."></textarea>
+        <div class="comment-submit-row">
+          <span style="font-size:0.65rem;color:var(--text-dim);">Your comment will be visible to all employees.</span>
+          <button class="comment-submit" onclick="postComment('${escapeHtml(ticket.ticket_id)}')">POST COMMENT</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  loadComments(ticket.ticket_id);
+}
+
+async function loadComments(ticketId) {
+  try {
+    const data = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/comments`);
+    const comments = data.comments || [];
+    communityCache[ticketId] = { comments };
+    
+    const countEl = document.getElementById(`comm-count-${ticketId}`);
+    if(countEl) countEl.textContent = `${comments.length} comment${comments.length !== 1 ? 's' : ''}`;
+    
+    const listEl = document.getElementById(`comm-list-${ticketId}`);
+    if(!listEl) return;
+    
+    if(!comments.length) {
+      listEl.innerHTML = `<div class="comment-empty">No community suggestions yet. Be the first to help! 🤝</div>`;
+      return;
+    }
+    
+    // Build threaded structure: top-level first, then replies
+    const topLevel = comments.filter(c => !c.parent_comment_id);
+    const replies = comments.filter(c => c.parent_comment_id);
+    
+    listEl.innerHTML = topLevel.map(c => {
+      const childReplies = replies.filter(r => r.parent_comment_id === c.id);
+      return renderCommentCard(c, ticketId) + childReplies.map(r => renderCommentCard(r, ticketId, true)).join('');
+    }).join('');
+    
+  } catch(err) {
+    const listEl = document.getElementById(`comm-list-${ticketId}`);
+    if(listEl) listEl.innerHTML = `<div class="comment-empty">Could not load comments.</div>`;
+  }
+}
+
+function renderCommentCard(c, ticketId, isReply = false) {
+  const verifiedBadge = c.is_verified ? `<span class="badge-verified">✓ VERIFIED SOLUTION</span>` : '';
+  const pinnedBadge = c.is_pinned ? `<span class="badge-pinned">📌 PINNED</span>` : '';
+  const cardClass = `comment-card${c.is_verified ? ' verified' : ''}${c.is_pinned ? ' pinned' : ''}${isReply ? ' reply-card' : ''}`;
+  
+  return `
+    <div class="${cardClass}" id="comment-${c.id}">
+      <div class="comment-meta">
+        <div>
+          <span class="comment-author">${escapeHtml(c.employee_name || c.employee_id)}</span>
+          <span class="comment-time" style="margin-left:0.5rem;">${escapeHtml(formatDate(c.created_at))}</span>
+        </div>
+        <div class="comment-badges">${verifiedBadge}${pinnedBadge}</div>
+      </div>
+      <div class="comment-text">${nl2br(c.comment)}</div>
+      <div class="comment-actions">
+        <button class="vote-btn${c.votes > 0 ? ' voted' : ''}" onclick="event.stopPropagation(); voteComment(${c.id}, '${escapeHtml(ticketId)}')">
+          ▲ Helpful (${c.votes || 0})
+        </button>
+        ${!isReply ? `<span class="reply-btn" onclick="event.stopPropagation(); showReplyInput(${c.id}, '${escapeHtml(ticketId)}')">💬 Reply</span>` : ''}
+      </div>
+      <div id="reply-input-area-${c.id}" style="display:none;margin-top:0.5rem;">
+        <textarea class="comment-textarea" id="reply-text-${c.id}" placeholder="Reply to this comment..." style="min-height:50px;"></textarea>
+        <div class="comment-submit-row" style="margin-top:0.4rem;">
+          <span></span>
+          <button class="comment-submit" onclick="postComment('${escapeHtml(ticketId)}', ${c.id})">REPLY</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function showReplyInput(commentId, ticketId) {
+  const area = document.getElementById(`reply-input-area-${commentId}`);
+  if(area) {
+    area.style.display = area.style.display === 'none' ? 'block' : 'none';
+    if(area.style.display === 'block') {
+      document.getElementById(`reply-text-${commentId}`)?.focus();
+    }
+  }
+}
+
+async function postComment(ticketId, parentId = null) {
+  const inputId = parentId ? `reply-text-${parentId}` : `comm-input-${ticketId}`;
+  const input = document.getElementById(inputId);
+  const text = (input?.value || '').trim();
+  
+  if(!text) return;
+  
+  try {
+    await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({
+        employee_id: employeeId,
+        employee_name: employeeName,
+        comment: text,
+        parent_comment_id: parentId,
+      }),
+    });
+    if(input) input.value = '';
+    if(parentId) {
+      const area = document.getElementById(`reply-input-area-${parentId}`);
+      if(area) area.style.display = 'none';
+    }
+    await loadComments(ticketId);
+  } catch(err) {
+    const detail = err.message || 'Failed to post comment.';
+    alert(detail.includes('spam') ? '🚫 Comment blocked — spam detected.' : detail);
+  }
+}
+
+async function voteComment(commentId, ticketId) {
+  try {
+    await apiJson(`/api/comments/${commentId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ employee_id: employeeId }),
+    });
+    await loadComments(ticketId);
+  } catch(err) { /* ignore */ }
+}
+
+async function loadAISummary(ticketId) {
+  const container = document.getElementById(`comm-ai-summary-${ticketId}`);
+  if(!container) return;
+  
+  container.innerHTML = `<div class="community-ai-summary"><div class="ai-label">🤖 AI SUMMARY</div>Generating summary...</div>`;
+  
+  try {
+    const data = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/comments/summary`);
+    container.innerHTML = `
+      <div class="community-ai-summary">
+        <div class="ai-label">🤖 AI SUMMARY · ${data.comment_count || 0} comments${data.has_verified ? ' · ✓ Has verified solution' : ''}</div>
+        ${escapeHtml(data.summary || 'No summary available.')}
+      </div>
+    `;
+  } catch {
+    container.innerHTML = `<div class="community-ai-summary"><div class="ai-label">🤖 AI SUMMARY</div>Could not generate summary.</div>`;
+  }
+}
+
+// Auto-scroll technician chat to latest
+function scrollTicketChat() {
+  const thread = document.getElementById('ticket-chat-thread');
+  if(thread) thread.scrollTop = thread.scrollHeight;
+}
+
+</script>
+
+<script>
+function showSimilarityModal(matches) {
+  const modal = document.getElementById('similarity-modal');
+  const resultsDiv = document.getElementById('similarity-results');
+  resultsDiv.innerHTML = matches.map(m => `
+    <div class="tk-card" style="cursor:default;">
+      <div class="tk-card-head">
+        <span class="tk-card-id">#${escapeHtml(m.ticket_id)}</span>
+        <span class="pill pill-resolved" style="font-size:0.6rem;">${escapeHtml(m.similarity)}% Match</span>
+      </div>
+      <div class="tk-card-desc"><strong>Issue:</strong> ${escapeHtml(m.description)}</div>
+      <div class="tk-card-desc" style="margin-bottom:0; color:var(--neon-green);"><strong>Solution:</strong> ${nl2br(m.resolution)}</div>
+    </div>
+  `).join('');
+  modal.classList.add('active');
+}
+
+function closeSimilarityModal() {
+  document.getElementById('similarity-modal').classList.remove('active');
+}
+
+function proceedTicketCreation() {
+  closeSimilarityModal();
+  if (pendingDraft) {
+    handleFix(false);
+  }
+}
+</script>
+</body>
+</html>

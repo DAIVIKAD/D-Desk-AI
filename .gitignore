@@ -1,0 +1,101 @@
+# =============================================================================
+# D Desk AI — Git Ignore Configuration
+# =============================================================================
+
+# ── Environment Variables & Secrets ──
+.env
+.env.*
+.env.local
+!.env.example
+*.pem
+*.key
+*.cert
+service_account*.json
+service-account*.json
+*service_account*.json
+*service-account*.json
+firebase*.json
+*firebase*.json
+
+# ── Python Bytecode & Cache ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ── Virtual Environments ──
+venv/
+venv_tf/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# ── Local SQLite Databases & Instances ──
+*.db
+*.sqlite
+*.sqlite3
+instance/
+**/instance/
+
+# ── Logs & Debugging ──
+*.log
+logs/
+*.pid
+
+# ── IDEs & Operating System Artifacts ──
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── Temporary & Scratch Files ──
+scratch/
+.pytest_cache/
+.coverage
+
+# ── Datasets & Training Files (Kept locally, excluded from Git) ──
+*.csv
+**/data.csv
+data.csv
+**/image_data/
+!**/image_labels.json
+
+# ── Academic Documents, Office Reports & Archive Bundles ──
+*.docx
+*.doc
+*.pdf
+*.pptx
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+overleaf_project/
+**/overleaf_project/

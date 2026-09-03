@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D Desk AI — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#04060f;--bg-mid:#07101e;--neon-blue:#00d4ff;--neon-green:#00ff88;
+    --neon-amber:#ffaa00;--neon-red:#ff4466;--text-bright:#e8f4ff;--text-dim:#5a7a9a;
+    --border-glow:rgba(0,212,255,0.18);--glass-bg:rgba(7,14,32,0.8);--card-bg:rgba(8,16,38,0.85);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Exo 2',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+  .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);}
+
+  /* TOPBAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.6rem;background:rgba(4,6,18,0.95);border-bottom:1px solid var(--border-glow);flex-shrink:0;z-index:50;position:relative;}
+  .tb-left{display:flex;align-items:center;gap:1.5rem;}
+  .brand{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--neon-blue);}
+  .admin-badge{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--neon-green);font-size:0.6rem;padding:0.2rem 0.7rem;border-radius:20px;font-family:'Share Tech Mono',monospace;letter-spacing:0.1em;}
+  .tb-right{display:flex;align-items:center;gap:1rem;}
+  .tb-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);padding:0.35rem 0.9rem;border-radius:6px;font-size:0.7rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
+  .tb-btn:hover{border-color:var(--neon-blue);color:var(--neon-blue);}
+  .tb-time{font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);}
+  .status-online{display:flex;align-items:center;gap:0.4rem;font-size:0.65rem;color:var(--neon-green);font-family:'Share Tech Mono',monospace;}
+  .dot-online{width:6px;height:6px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 6px var(--neon-green);animation:blink 2s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  /* LAYOUT */
+  .layout{display:flex;flex:1;overflow:hidden;}
+
+  /* SIDEBAR */
+  .sidebar{width:200px;flex-shrink:0;background:rgba(4,6,18,0.9);border-right:1px solid var(--border-glow);padding:1.2rem 0.8rem;display:flex;flex-direction:column;gap:0.3rem;overflow-y:auto;}
+  .nav-section{font-size:0.58rem;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;padding:0.8rem 0.6rem 0.3rem;}
+  .nav-item{display:flex;align-items:center;gap:0.7rem;padding:0.6rem 0.8rem;border-radius:8px;cursor:pointer;font-size:0.78rem;transition:all 0.2s;color:var(--text-dim);border:1px solid transparent;}
+  .nav-item:hover,.nav-item.active{background:rgba(0,212,255,0.07);color:var(--neon-blue);border-color:rgba(0,212,255,0.12);}
+  .nav-item .icon{font-size:0.95rem;width:20px;text-align:center;}
+
+  /* MAIN CONTENT */
+  .main{flex:1;overflow-y:auto;padding:1.4rem;display:flex;flex-direction:column;gap:1.2rem;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+  .main::-webkit-scrollbar{width:4px;}
+  .main::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:2px;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:0.5rem;flex-shrink:0;}
+  .tab{padding:0.5rem 1.2rem;border-radius:8px;font-size:0.72rem;cursor:pointer;font-family:'Orbitron',sans-serif;font-weight:600;letter-spacing:0.08em;transition:all 0.2s;border:1px solid rgba(255,255,255,0.07);color:var(--text-dim);}
+  .tab.active{background:rgba(0,212,255,0.1);color:var(--neon-blue);border-color:rgba(0,212,255,0.3);}
+  .tab:hover:not(.active){color:var(--text-bright);}
+
+  /* Panel visibility */
+  .panel{display:none;}
+  .panel.active{display:flex;flex-direction:column;gap:1.2rem;animation:fade-in 0.3s ease;}
+  @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* STAT CARDS */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+  .stat-card{background:var(--card-bg);border:1px solid var(--border-glow);border-radius:16px;padding:1.2rem 1.4rem;position:relative;overflow:hidden;transition:all 0.3s;}
+  .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+  .stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--stat-accent,rgba(0,212,255,0.08));}
+  .stat-label{font-size:0.62rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;margin-bottom:0.6rem;}
+  .stat-value{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;line-height:1;}
+  .stat-sub{font-size:0.68rem;color:var(--text-dim);margin-top:0.4rem;display:flex;align-items:center;gap:0.3rem;}
+  .trend-up{color:var(--neon-green);}
+  .trend-down{color:var(--neon-red);}
+
+  .stat-card.blue{--stat-accent:rgba(0,212,255,0.1);}  .stat-card.blue .stat-value{color:var(--neon-blue);}
+  .stat-card.green{--stat-accent:rgba(0,255,136,0.1);} .stat-card.green .stat-value{color:var(--neon-green);}
+  .stat-card.amber{--stat-accent:rgba(255,170,0,0.1);} .stat-card.amber .stat-value{color:var(--neon-amber);}
+  .stat-card.red{--stat-accent:rgba(255,68,102,0.1);}  .stat-card.red .stat-value{color:var(--neon-red);}
+
+  /* TWO COLUMNS */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+  .three-col{display:grid;grid-template-columns:2fr 1fr;gap:1.2rem;}
+
+  /* Generic card */
+  .card{background:var(--card-bg);border:1px solid var(--border-glow);border-radius:16px;padding:1.3rem 1.4rem;}
+  .card-title{font-family:'Orbitron',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.12em;color:var(--neon-blue);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:0.6rem;}
+  .card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--neon-blue);box-shadow:0 0 6px var(--neon-blue);}
+
+  /* Bar Chart */
+  .chart-bars{display:flex;align-items:flex-end;gap:0.6rem;height:140px;padding-bottom:0.5rem;}
+  .bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.3rem;}
+  .bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end;}
+  .bar{width:100%;border-radius:6px 6px 0 0;min-height:4px;transition:height 0.8s cubic-bezier(0.23,1,0.32,1);position:relative;cursor:pointer;}
+  .bar:hover::after{content:attr(data-val);position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:0.65rem;color:var(--text-bright);font-family:'Share Tech Mono',monospace;white-space:nowrap;}
+  .bar-label{font-size:0.6rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;text-align:center;}
+  .bar-network{background:linear-gradient(180deg,var(--neon-blue),rgba(0,212,255,0.3));}
+  .bar-software{background:linear-gradient(180deg,#7b4fff,rgba(123,79,255,0.3));}
+  .bar-hardware{background:linear-gradient(180deg,var(--neon-amber),rgba(255,170,0,0.3));}
+  .bar-printer{background:linear-gradient(180deg,#ff6b35,rgba(255,107,53,0.3));}
+  .bar-other{background:linear-gradient(180deg,var(--text-dim),rgba(90,122,154,0.3));}
+
+  /* Donut Chart */
+  .donut-wrap{display:flex;align-items:center;gap:1.5rem;}
+  .donut-svg{flex-shrink:0;}
+  .donut-legend{display:flex;flex-direction:column;gap:0.6rem;}
+  .legend-item{display:flex;align-items:center;gap:0.6rem;font-size:0.75rem;}
+  .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .legend-pct{margin-left:auto;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.68rem;}
+
+  /* Tickets table */
+  .ticket-table{width:100%;border-collapse:collapse;}
+  .ticket-table th{font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;padding:0.6rem 0.8rem;text-align:left;border-bottom:1px solid var(--border-glow);}
+  .ticket-table td{padding:0.7rem 0.8rem;font-size:0.78rem;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .ticket-table tr:hover td{background:rgba(0,212,255,0.03);}
+  .tid{color:var(--neon-blue);font-family:'Share Tech Mono',monospace;font-size:0.7rem;}
+  .pill{display:inline-block;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.6rem;font-family:'Share Tech Mono',monospace;}
+  .pill-open{background:rgba(0,212,255,0.1);color:var(--neon-blue);}
+  .pill-progress{background:rgba(255,170,0,0.1);color:var(--neon-amber);}
+  .pill-resolved{background:rgba(0,255,136,0.1);color:var(--neon-green);}
+  .pill-closed{background:rgba(90,122,154,0.1);color:var(--text-dim);}
+  .pill-high{background:rgba(255,68,102,0.1);color:var(--neon-red);}
+  .pill-med{background:rgba(255,170,0,0.1);color:var(--neon-amber);}
+  .pill-low{background:rgba(0,255,136,0.1);color:var(--neon-green);}
+  .tbl-action{background:none;border:1px solid rgba(0,212,255,0.2);color:var(--neon-blue);padding:0.2rem 0.6rem;border-radius:6px;font-size:0.62rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
+  .tbl-action:hover{background:rgba(0,212,255,0.1);}
+
+  /* AI Insights */
+  .ai-insight-box{
+    background:linear-gradient(135deg,rgba(0,212,255,0.04),rgba(0,255,136,0.02));
+    border:1px solid rgba(0,212,255,0.2);border-radius:14px;padding:1.1rem 1.3rem;
+    margin-bottom:0.8rem;position:relative;overflow:hidden;
+  }
+  .ai-insight-box::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--neon-blue),var(--neon-green));}
+  .ai-insight-title{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--neon-blue);letter-spacing:0.1em;margin-bottom:0.5rem;}
+  .ai-insight-text{font-size:0.8rem;line-height:1.7;color:var(--text-bright);}
+  .generating-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.62rem;color:var(--neon-green);font-family:'Share Tech Mono',monospace;margin-bottom:0.8rem;}
+  .gen-dot{width:5px;height:5px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 5px var(--neon-green);animation:blink 1s infinite;}
+
+  /* AI Generate button */
+  .ai-btn{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    padding:0.6rem 1.3rem;border-radius:10px;border:1px solid rgba(0,212,255,0.3);
+    background:rgba(0,212,255,0.07);color:var(--neon-blue);
+    font-family:'Orbitron',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;
+    cursor:pointer;transition:all 0.3s;text-transform:uppercase;
+  }
+  .ai-btn:hover{background:rgba(0,212,255,0.15);box-shadow:0 0 20px rgba(0,212,255,0.15);}
+
+  /* ── CIRCULAR PANEL ── */
+  .circ-layout{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+  .compose-form{display:flex;flex-direction:column;gap:0.8rem;}
+  .form-label{font-size:0.6rem;letter-spacing:0.12em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;margin-bottom:0.3rem;}
+  .form-input,.form-select,.form-textarea{
+    width:100%;padding:0.7rem 1rem;
+    background:rgba(10,18,42,0.7);border:1px solid var(--border-glow);border-radius:10px;
+    color:var(--text-bright);font-family:'Exo 2',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.2s;
+  }
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--neon-blue);}
+  .form-select{-webkit-appearance:none;cursor:pointer;}
+  .form-textarea{resize:vertical;min-height:80px;}
+  .send-circ-btn{
+    padding:0.8rem;background:linear-gradient(135deg,rgba(0,255,136,0.15),rgba(0,212,255,0.1));
+    border:1px solid rgba(0,255,136,0.35);border-radius:10px;color:var(--neon-green);
+    font-family:'Orbitron',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:0.15em;
+    cursor:pointer;transition:all 0.3s;text-transform:uppercase;
+  }
+  .send-circ-btn:hover{box-shadow:0 0 20px rgba(0,255,136,0.2);}
+
+  /* Circular items */
+  .circular-item{
+    background:rgba(10,18,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:12px;
+    padding:1rem 1.1rem;margin-bottom:0.7rem;transition:all 0.2s;
+    border-left:3px solid var(--item-color,var(--neon-blue));
+  }
+  .circular-item:hover{border-color:var(--item-color,var(--neon-blue));background:rgba(0,212,255,0.03);}
+  .circ-meta{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.5rem;gap:0.8rem;flex-wrap:wrap;}
+  .circ-subject{font-weight:600;font-size:0.82rem;}
+  .circ-date{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--text-dim);}
+  .circ-body{font-size:0.76rem;color:var(--text-dim);line-height:1.6;}
+  .circ-footer{display:flex;align-items:center;justify-content:space-between;gap:0.8rem;margin-top:0.6rem;flex-wrap:wrap;}
+  .circ-footer-left{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;}
+  .circ-actions{display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;}
+  .circ-to{font-size:0.62rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .circ-to span{color:var(--neon-amber);}
+  .circ-expiry{font-size:0.62rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+
+  /* Scrollable containers */
+  .scroll-box{max-height:340px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+  .scroll-box::-webkit-scrollbar{width:3px;}
+  .scroll-box::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:2px;}
+  .data-stack{display:flex;flex-direction:column;gap:0.75rem;}
+  .data-row{
+    display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;
+    padding:0.95rem 1rem;border-radius:12px;background:rgba(10,18,42,0.62);border:1px solid rgba(255,255,255,0.06);
+  }
+  .data-main{display:flex;flex-direction:column;gap:0.25rem;min-width:0;}
+  .data-title{font-size:0.84rem;font-weight:600;color:var(--text-bright);}
+  .data-sub{font-size:0.68rem;color:var(--text-dim);line-height:1.6;}
+  .data-actions{display:flex;gap:0.55rem;flex-wrap:wrap;justify-content:flex-end;}
+  .action-btn,.danger-btn{
+    padding:0.42rem 0.8rem;border-radius:8px;cursor:pointer;font-size:0.64rem;
+    font-family:'Orbitron',sans-serif;font-weight:700;letter-spacing:0.08em;transition:all 0.2s;
+  }
+  .action-btn{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.28);color:var(--neon-blue);}
+  .action-btn:hover{background:rgba(0,212,255,0.18);}
+  .danger-btn{background:rgba(255,68,102,0.08);border:1px solid rgba(255,68,102,0.25);color:var(--neon-red);}
+  .danger-btn:hover{background:rgba(255,68,102,0.16);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+  .form-grid .full{grid-column:1/-1;}
+  .helper-text{font-size:0.68rem;color:var(--text-dim);line-height:1.6;}
+  .metric-list{display:flex;flex-direction:column;gap:0.8rem;}
+  .metric-row{display:flex;align-items:center;gap:0.8rem;}
+  .metric-label{width:110px;font-size:0.74rem;color:var(--text-bright);}
+  .metric-track{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,0.06);overflow:hidden;}
+  .metric-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--neon-blue),var(--neon-green));}
+  .metric-value{width:46px;text-align:right;font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--text-dim);}
+  .role-chip{
+    display:inline-block;padding:0.18rem 0.55rem;border-radius:999px;
+    background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.18);
+    color:var(--neon-green);font-size:0.6rem;font-family:'Share Tech Mono',monospace;
+  }
+  .heat-section{margin-bottom:1rem;}
+  .heat-subtitle{
+    font-size:0.62rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;
+    font-family:'Share Tech Mono',monospace;margin-bottom:0.8rem;
+  }
+  .heat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.8rem;}
+  .heat-tile{
+    position:relative;overflow:hidden;padding:1rem;border-radius:14px;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(255,240,120,calc(var(--heat,0.35) * 0.85)) 0%, rgba(255,140,40,calc(var(--heat,0.35) * 0.65)) 26%, rgba(255,56,96,calc(var(--heat,0.35) * 0.38)) 52%, rgba(8,16,38,0.96) 80%);
+    border:1px solid rgba(255,140,40,0.16);
+    box-shadow:0 10px 28px rgba(0,0,0,0.28);
+  }
+  .heat-tile::after{
+    content:'';position:absolute;inset:auto -12px -18px auto;width:96px;height:96px;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,120,40,calc(var(--heat,0.35) * 0.6)) 0%, transparent 68%);
+    pointer-events:none;filter:blur(4px);
+  }
+  .heat-hot{border-color:rgba(255,96,64,0.34);}
+  .heat-warm{border-color:rgba(255,170,0,0.28);}
+  .heat-cool{border-color:rgba(0,212,255,0.18);}
+  .heat-value{font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#fff;margin-bottom:0.4rem;}
+  .heat-label{font-size:0.78rem;font-weight:600;color:var(--text-bright);}
+  .heat-meta{font-size:0.67rem;line-height:1.6;color:rgba(232,244,255,0.72);margin-top:0.45rem;}
+  .heat-badge{
+    display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.7rem;
+    padding:0.18rem 0.45rem;border-radius:999px;background:rgba(0,0,0,0.22);
+    color:#ffe0b6;font-size:0.58rem;font-family:'Share Tech Mono',monospace;letter-spacing:0.08em;
+  }
+  .aging-matrix{display:flex;flex-direction:column;gap:0.55rem;}
+  .aging-row{
+    display:grid;grid-template-columns:130px repeat(4, 1fr) 60px;
+    gap:0.55rem;align-items:stretch;
+  }
+  .aging-head .aging-slot{
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+    color:var(--text-dim);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;
+    font-family:'Share Tech Mono',monospace;padding:0.55rem 0.6rem;border-radius:10px;text-align:center;
+  }
+  .aging-label{
+    display:flex;align-items:center;padding:0.75rem 0.85rem;border-radius:12px;
+    background:rgba(10,18,42,0.72);border:1px solid rgba(255,255,255,0.06);
+    font-size:0.76rem;font-weight:600;color:var(--text-bright);
+  }
+  .aging-slot{
+    display:flex;align-items:center;justify-content:center;min-height:56px;
+    border-radius:12px;border:1px solid rgba(255,255,255,0.08);
+    background:rgba(10,18,42,0.72);position:relative;overflow:hidden;
+  }
+  .aging-slot::after{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 35%, rgba(255,255,255,calc(var(--heat,0) * 0.12)) 0%, transparent 65%);
+    pointer-events:none;
+  }
+  .aging-empty{color:var(--text-dim);font-size:0.78rem;}
+  .aging-cool{background:rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.18);}
+  .aging-warm{background:rgba(255,170,0,0.12);border-color:rgba(255,170,0,0.22);}
+  .aging-hot{background:rgba(255,68,102,0.14);border-color:rgba(255,68,102,0.24);}
+  .aging-count{font-family:'Orbitron',sans-serif;font-size:1.05rem;color:#fff;}
+  .aging-total{
+    display:flex;align-items:center;justify-content:center;border-radius:12px;
+    background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.18);
+    color:var(--neon-green);font-family:'Orbitron',sans-serif;font-size:0.95rem;
+  }
+  .powered-footer{
+    position:fixed;right:16px;bottom:12px;z-index:90;
+    font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;
+    color:rgba(232,244,255,0.5);font-family:'Share Tech Mono',monospace;
+    background:rgba(4,8,20,0.72);border:1px solid rgba(255,255,255,0.08);
+    padding:0.3rem 0.65rem;border-radius:999px;backdrop-filter:blur(10px);
+  }
+  .admin-modal-overlay{
+    position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;
+    background:rgba(4,6,18,0.82);backdrop-filter:blur(10px);padding:1rem;
+  }
+  .admin-modal-overlay.active{display:flex;}
+  .admin-modal{
+    width:min(460px,calc(100vw - 2rem));background:rgba(8,16,38,0.96);
+    border:1px solid var(--border-glow);border-radius:18px;padding:1.35rem 1.4rem;
+    box-shadow:0 24px 70px rgba(0,0,0,0.55);
+  }
+  .admin-modal-title{
+    font-family:'Orbitron',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.12em;
+    color:var(--neon-blue);text-transform:uppercase;margin-bottom:0.8rem;
+  }
+  .admin-modal-message{font-size:0.8rem;line-height:1.7;color:var(--text-bright);margin-bottom:1rem;}
+  .admin-modal-field{display:grid;gap:0.4rem;margin-bottom:0.9rem;}
+  .admin-modal-input{
+    width:100%;padding:0.75rem 0.9rem;background:rgba(10,18,42,0.8);border:1px solid var(--border-glow);
+    border-radius:10px;color:var(--text-bright);font-family:'Exo 2',sans-serif;font-size:0.86rem;outline:none;
+  }
+  .admin-modal-input:focus{border-color:var(--neon-blue);}
+  .admin-modal-error{min-height:1.2rem;font-size:0.72rem;color:var(--neon-red);margin-bottom:0.6rem;}
+  .admin-modal-actions{display:flex;justify-content:flex-end;gap:0.7rem;flex-wrap:wrap;}
+  .admin-toast-stack{
+    position:fixed;top:76px;right:16px;z-index:130;display:flex;flex-direction:column;gap:0.7rem;
+    max-width:min(360px,calc(100vw - 2rem));
+  }
+  .admin-toast{
+    padding:0.9rem 1rem;border-radius:12px;border:1px solid rgba(0,212,255,0.2);
+    background:rgba(8,16,38,0.95);color:var(--text-bright);font-size:0.78rem;line-height:1.6;
+    box-shadow:0 12px 36px rgba(0,0,0,0.35);transition:opacity 0.25s ease,transform 0.25s ease;
+  }
+  .admin-toast.success{border-color:rgba(0,255,136,0.28);box-shadow:0 12px 36px rgba(0,255,136,0.08);}
+  .admin-toast.error{border-color:rgba(255,68,102,0.28);box-shadow:0 12px 36px rgba(255,68,102,0.08);}
+  .admin-toast.info{border-color:rgba(0,212,255,0.28);}
+  .reply-stack{display:flex;flex-direction:column;gap:0.75rem;}
+  .reply-card{
+    background:rgba(10,18,42,0.64);border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;padding:0.95rem 1rem;
+  }
+  .reply-card.highlight{border-color:rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);}
+  .reply-meta{display:flex;justify-content:space-between;gap:0.8rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:0.45rem;}
+  .reply-author{font-size:0.8rem;font-weight:600;color:var(--text-bright);}
+  .reply-role{
+    display:inline-flex;align-items:center;gap:0.35rem;padding:0.14rem 0.45rem;border-radius:999px;
+    background:rgba(0,212,255,0.08);color:var(--neon-blue);font-size:0.58rem;
+    font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-left:0.45rem;
+  }
+  .reply-role.role-tech,.reply-role.role-technician{background:rgba(255,107,53,0.1);color:#ff6b35;}
+  .reply-role.role-admin{background:rgba(0,255,136,0.1);color:var(--neon-green);}
+  .reply-role.role-employee{background:rgba(0,212,255,0.08);color:var(--neon-blue);}
+  .reply-time{font-size:0.64rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .reply-message{font-size:0.78rem;line-height:1.65;color:var(--text-bright);}
+  .reply-empty{
+    color:var(--text-dim);font-size:0.75rem;line-height:1.6;padding:0.9rem 1rem;
+    border:1px dashed rgba(255,255,255,0.08);border-radius:12px;
+  }
+  .inline-pass-input{
+    width:190px;max-width:100%;padding:0.55rem 0.8rem;background:rgba(10,18,42,0.82);
+    border:1px solid rgba(0,212,255,0.18);border-radius:8px;color:var(--text-bright);
+    font-family:'Exo 2',sans-serif;font-size:0.78rem;outline:none;
+  }
+  .inline-pass-input:focus{border-color:var(--neon-blue);}
+
+  /* ── AI REPORT ENHANCED ── */
+  .report-section{margin-bottom:1rem;}
+  .report-section-title{
+    font-family:'Orbitron',sans-serif;font-size:0.65rem;font-weight:700;
+    letter-spacing:0.12em;color:var(--neon-green);text-transform:uppercase;
+    margin-bottom:0.6rem;padding-bottom:0.4rem;
+    border-bottom:1px solid rgba(0,255,136,0.15);
+    display:flex;align-items:center;gap:0.5rem;
+  }
+  .report-section-title .dot{width:5px;height:5px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 5px var(--neon-green);}
+  .report-actions{display:flex;gap:0.7rem;flex-wrap:wrap;margin-top:1rem;}
+  .download-btn{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    padding:0.6rem 1.3rem;border-radius:10px;border:1px solid rgba(0,255,136,0.3);
+    background:rgba(0,255,136,0.07);color:var(--neon-green);
+    font-family:'Orbitron',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;
+    cursor:pointer;transition:all 0.3s;text-transform:uppercase;
+  }
+  .download-btn:hover{background:rgba(0,255,136,0.15);box-shadow:0 0 20px rgba(0,255,136,0.15);}
+
+  /* ── AI LOG CONTROLS ── */
+  .log-controls{
+    display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;margin-bottom:0.9rem;
+  }
+  .log-controls .ai-btn{font-size:0.6rem;padding:0.45rem 0.9rem;}
+
+  /* Print styles for PDF download */
+  @media print {
+    body,html{background:#fff!important;color:#111!important;overflow:visible!important;height:auto!important;}
+    .topbar,.sidebar,.scanlines,.powered-footer,.admin-toast-stack,
+    .admin-modal-overlay,.nav-section,.nav-item,.ai-btn,.download-btn,.report-actions{display:none!important;}
+    .layout{display:block!important;overflow:visible!important;}
+    .main{overflow:visible!important;padding:1rem!important;}
+    .panel{display:none!important;}
+    #panel-insights{display:block!important;}
+    .card{border:1px solid #ddd!important;background:#fff!important;box-shadow:none!important;page-break-inside:avoid;}
+    .ai-insight-box{border:1px solid #ccc!important;background:#f8f9fa!important;}
+    .ai-insight-box::before{background:#333!important;}
+    .ai-insight-title{color:#333!important;}
+    .ai-insight-text{color:#222!important;}
+    .card-title{color:#111!important;}
+    .card-title .dot{background:#333!important;box-shadow:none!important;}
+    .report-section-title{color:#333!important;border-bottom-color:#ccc!important;}
+    .report-section-title .dot{background:#333!important;box-shadow:none!important;}
+  }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="brand">D Desk AI</div>
+    <div class="admin-badge">ADMIN PANEL</div>
+  </div>
+  <div class="tb-right">
+    <div class="status-online"><div class="dot-online"></div>All Systems Online</div>
+    <div class="tb-time" id="live-time">--:--:--</div>
+    <button class="tb-btn" onclick="window.location='index.html'">LOGOUT</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="nav-section">Dashboard</div>
+    <div class="nav-item active" data-tab="overview" onclick="switchTab('overview', this)"><span class="icon">📊</span> Overview</div>
+    <div class="nav-item" data-tab="tickets" onclick="switchTab('tickets', this)"><span class="icon">🎫</span> All Tickets</div>
+    <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics', this)"><span class="icon">📈</span> Analytics</div>
+    <div class="nav-section">AI Tools</div>
+    <div class="nav-item" data-tab="insights" onclick="switchTab('insights', this)"><span class="icon">🧠</span> AI Insights</div>
+    <div class="nav-item" data-tab="predictions" onclick="switchTab('predictions', this)"><span class="icon">🖼️</span> AI Logs</div>
+    <div class="nav-section">Communication</div>
+    <div class="nav-item" data-tab="circulars" onclick="switchTab('circulars', this)"><span class="icon">📢</span> Circulars</div>
+    <div class="nav-section">Config</div>
+    <div class="nav-item" data-tab="techs" onclick="switchTab('techs', this)"><span class="icon">👥</span> Technicians</div>
+    <div class="nav-item" data-tab="users" onclick="switchTab('users', this)"><span class="icon">🛂</span> Users</div>
+    <div class="nav-item" data-tab="settings" onclick="switchTab('settings', this)"><span class="icon">⚙️</span> Settings</div>
+  </div>
+
+  <div class="main" id="main-content">
+
+    <!-- OVERVIEW PANEL -->
+    <div class="panel active" id="panel-overview">
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-label">Total Tickets</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-sub" id="stat-total-sub">Live from the database</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Resolved Today</div>
+          <div class="stat-value" id="stat-resolved">0</div>
+          <div class="stat-sub" id="stat-resolved-sub">Updated in real time</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Pending / Open</div>
+          <div class="stat-value" id="stat-open">0</div>
+          <div class="stat-sub" id="stat-open-sub">Open + in progress queue</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Avg Resolution</div>
+          <div class="stat-value" id="stat-resolution">0h</div>
+          <div class="stat-sub" id="stat-resolution-sub">Based on resolved tickets</div>
+        </div>
+      </div>
+
+      <div class="three-col">
+        <!-- Weekly bar chart -->
+        <div class="card">
+          <div class="card-title"><div class="dot"></div>Tickets This Week (by Category)</div>
+          <div class="chart-bars" id="bar-chart"></div>
+        </div>
+        <!-- Donut chart -->
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)"></div>Category Distribution</div>
+          <div class="donut-wrap" id="donut-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Recent tickets table -->
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Recent Tickets</div>
+        <table class="ticket-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th><th>Employee</th><th>Category</th><th>Description</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="ticket-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TICKETS PANEL -->
+    <div class="panel" id="panel-tickets">
+      <div class="card" id="ticket-detail-card" style="display:none;">
+        <div class="card-title"><div class="dot"></div>Selected Ticket</div>
+        <div id="ticket-detail-content"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>All Tickets — Full View</div>
+        <table class="ticket-table">
+          <thead>
+            <tr><th>ID</th><th>Employee</th><th>Category</th><th>Description</th><th>Priority</th><th>Status</th><th>Created</th><th>Assigned</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="all-tickets-body"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot" style="background:var(--neon-red);box-shadow:0 0 6px var(--neon-red)"></div>Recently Deleted Tickets</div>
+        <div class="helper-text" style="margin-bottom:0.9rem;">Deleted tickets stay here until their retention window expires. Restore them anytime or remove them permanently right away.</div>
+        <table class="ticket-table">
+          <thead>
+            <tr><th>ID</th><th>Employee</th><th>Deleted By</th><th>Deleted</th><th>Purge After</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="deleted-tickets-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PANEL -->
+    <div class="panel" id="panel-analytics">
+      <div class="stats-row">
+        <div class="stat-card blue"><div class="stat-label">Auto-Resolved by AI</div><div class="stat-value" id="analytics-auto">0</div><div class="stat-sub">Pulled from ticket history</div></div>
+        <div class="stat-card green"><div class="stat-label">Duplicates Blocked</div><div class="stat-value" id="analytics-duplicates">0</div><div class="stat-sub">Flagged by duplicate detection</div></div>
+        <div class="stat-card amber"><div class="stat-label">Avg First Response</div><div class="stat-value" id="analytics-response">0m</div><div class="stat-sub">Approx. based on ticket activity</div></div>
+        <div class="stat-card red"><div class="stat-label">SLA Breached</div><div class="stat-value" id="analytics-sla">0</div><div class="stat-sub">Open > 8h or resolved late</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title"><div class="dot"></div>Daily Ticket Volume (Last 14 Days)</div>
+          <div class="chart-bars" id="daily-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)"></div>Technician Performance</div>
+          <div id="tech-perf"></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title"><div class="dot"></div>Queue Aging Matrix</div>
+          <div id="heatmap-issues"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--neon-amber);box-shadow:0 0 6px var(--neon-amber)"></div>Department / Location Heat Signature</div>
+          <div id="heatmap-locations"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI INSIGHTS PANEL -->
+    <div class="panel" id="panel-insights">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>AI-Generated System Insights</div>
+        <div style="display:flex;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+          <button class="ai-btn" onclick="generateInsight('trends')">🧠 Analyze Trends</button>
+          <button class="ai-btn" onclick="generateInsight('recommendations')">💡 Get Recommendations</button>
+          <button class="ai-btn" onclick="generateInsight('report')">📄 Generate Report</button>
+          <button class="ai-btn" onclick="generateInsight('predictions')">🔮 Predict Next Week</button>
+        </div>
+        <div id="insights-output">
+          <div class="ai-insight-box">
+            <div class="ai-insight-title">LIVE SYSTEM SUMMARY</div>
+            <div class="ai-insight-text">Loading the latest admin insight from live ticket data...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-predictions">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>AI Prediction Logs</div>
+        <div class="helper-text" style="margin-bottom:0.9rem;">Image prediction history, fix-flow status, and any ticket created from the agentic workflow.</div>
+        <div class="log-controls">
+          <button class="ai-btn" onclick="clearAllPredictionLogs()" style="border-color:rgba(255,68,102,0.3);background:rgba(255,68,102,0.07);color:var(--neon-red);">🗑️ Clear All Logs</button>
+        </div>
+        <table class="ticket-table">
+          <thead>
+            <tr><th>Time</th><th>User</th><th>Issue</th><th>Confidence</th><th>Fix Status</th><th>Ticket</th><th>Assigned</th></tr>
+          </thead>
+          <tbody id="prediction-logs-body"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot" style="background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)"></div>Image Ticket Routing</div>
+        <div id="prediction-routing-summary"></div>
+      </div>
+    </div>
+
+    <!-- CIRCULARS PANEL -->
+    <div class="panel" id="panel-circulars">
+      <div class="circ-layout">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)"></div>Compose Circular / Notice</div>
+          <div class="compose-form">
+            <div>
+              <div class="form-label">Subject / Title</div>
+              <input class="form-input" id="circ-subject" placeholder="e.g. Scheduled Network Maintenance" />
+            </div>
+            <div>
+              <div class="form-label">Target Recipients</div>
+              <select class="form-select" id="circ-target">
+                <option value="all-tech">All Technicians</option>
+                <option value="network-tech">Network Team</option>
+                <option value="software-tech">Software Team</option>
+                <option value="hardware-tech">Hardware Team</option>
+                <option value="all">All Staff</option>
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Priority Level</div>
+              <select class="form-select" id="circ-priority">
+                <option value="normal">Normal</option>
+                <option value="urgent">Urgent</option>
+                <option value="info">Informational</option>
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Auto Delete</div>
+              <select class="form-select" id="circ-expiry">
+                <option value="">Never auto delete</option>
+                <option value="7">Delete after 7 days</option>
+                <option value="30">Delete after 30 days</option>
+                <option value="90">Delete after 90 days</option>
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Message</div>
+              <textarea class="form-textarea" id="circ-body" placeholder="Write your notice or instruction here..."></textarea>
+            </div>
+            <button class="send-circ-btn" id="circ-send-btn" onclick="sendCircular()">📡 BROADCAST CIRCULAR</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><div class="dot"></div>Sent Circulars</div>
+          <div class="scroll-box" id="circulars-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-techs">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>Technician Workload</div>
+        <div id="tech-workload"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot" style="background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)"></div>Specialization Assignment View</div>
+        <div id="tech-assignment-view"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-users">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)"></div>Create User</div>
+          <div class="form-grid">
+            <div>
+              <div class="form-label">Full Name</div>
+              <input class="form-input" id="user-name" placeholder="e.g. Priya Sharma" />
+            </div>
+            <div>
+              <div class="form-label">Username</div>
+              <input class="form-input" id="user-username" placeholder="e.g. priya01" />
+            </div>
+            <div>
+              <div class="form-label">Password</div>
+              <input class="form-input" id="user-password" type="password" placeholder="Set initial password" />
+            </div>
+            <div>
+              <div class="form-label">Role</div>
+              <select class="form-select" id="user-role" onchange="toggleTechnicianSpecialization()">
+                <option value="employee">Employee</option>
+                <option value="technician">Technician</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="full">
+              <div class="form-label">Department / Location</div>
+              <input class="form-input" id="user-dept" placeholder="e.g. IT, Finance, HQ Floor 3" />
+            </div>
+            <div class="full" id="technician-specialization-wrap" style="display:none;">
+              <div class="form-label">Technician Specialization</div>
+              <select class="form-select" id="user-specialization">
+                <option value="">Select specialization</option>
+                <option value="hardware">Hardware</option>
+                <option value="software">Software</option>
+                <option value="networking">Networking</option>
+                <option value="printer_support">Printer Support</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            <div class="full">
+              <button class="send-circ-btn" onclick="createUser()">CREATE USER</button>
+            </div>
+          </div>
+          <div class="helper-text" style="margin-top:0.8rem;">Admins can create employees, technicians, and additional admins without touching the database directly.</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><div class="dot"></div>Password Reset Requests</div>
+          <div class="helper-text" style="margin-bottom:0.9rem;">Employees and technicians can request resets from the login screen. Approve a request below and set the new password.</div>
+          <div class="scroll-box data-stack" id="reset-requests-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>User Directory</div>
+        <div class="scroll-box data-stack" id="users-list"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-settings">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>System Settings Snapshot</div>
+        <div id="settings-content"></div>
+        <div style="margin-top:1rem;">
+          <button class="ai-btn" onclick="refreshDashboard()">Refresh Live Data</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="powered-footer">Powered by Daivik Software Solutions</div>
+<div class="admin-toast-stack" id="admin-toast-stack"></div>
+<div class="admin-modal-overlay" id="admin-action-modal" onclick="handleAdminModalBackdrop(event)">
+  <div class="admin-modal">
+    <div class="admin-modal-title" id="admin-modal-title">Admin Action</div>
+    <div class="admin-modal-message" id="admin-modal-message"></div>
+    <div class="admin-modal-field" id="admin-modal-field" style="display:none;">
+      <div class="form-label" id="admin-modal-label">Value</div>
+      <input class="admin-modal-input" id="admin-modal-input" />
+    </div>
+    <div class="admin-modal-error" id="admin-modal-error"></div>
+    <div class="admin-modal-actions">
+      <button class="tb-btn" type="button" onclick="closeAdminModal()">Cancel</button>
+      <button class="action-btn" type="button" id="admin-modal-confirm-btn" onclick="confirmAdminModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const currentRole = sessionStorage.getItem('nd_role');
+if(currentRole !== 'admin') {
+  window.location = 'index.html';
+}
+const adminUser = sessionStorage.getItem('nd_user') || 'admin';
+
+function updateClock() {
+  document.getElementById('live-time').textContent = new Date().toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+const CATEGORY_ORDER = ['Network', 'Software', 'Hardware', 'Printer', 'Other'];
+const CATEGORY_COLORS = {
+  Network: '#00d4ff',
+  Software: '#7b4fff',
+  Hardware: '#ffaa00',
+  Printer: '#ff6b35',
+  Other: '#5a7a9a',
+};
+
+const state = {
+  tickets: [],
+  deletedTickets: [],
+  stats: null,
+  categoryDistribution: {},
+  dailyVolume: [],
+  circulars: [],
+  health: null,
+  users: [],
+  resetRequests: [],
+  heatmap: null,
+  predictionLogs: [],
+  technicianAssignments: null,
+  currentTab: 'overview',
+};
+
+const adminModalState = {
+  action: null,
+  requireInput: false,
+  submitting: false,
+};
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function nl2br(value) {
+  return escapeHtml(value).replace(/\n/g, '<br>');
+}
+
+function formatAiMarkdown(value) {
+  if(!value) return '';
+  const lines = String(value).split('\n');
+  let html = [];
+  let inTable = false;
+  let tableHeaderParsed = false;
+
+  for(let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i].trim();
+    if(rawLine.startsWith('|') && rawLine.endsWith('|')) {
+      const cells = rawLine.split('|').slice(1, -1).map(c => c.trim());
+      if(cells.every(c => /^[-:]+$/.test(c))) {
+        tableHeaderParsed = true;
+        continue;
+      }
+      if(!inTable) {
+        inTable = true;
+        tableHeaderParsed = false;
+        html.push('<div style="overflow-x:auto; margin:0.8rem 0;"><table style="width:100%; border-collapse:collapse; font-size:0.82rem;">');
+      }
+      if(!tableHeaderParsed) {
+        html.push('<tr style="background:rgba(0,212,255,0.12); border-bottom:1px solid var(--neon-blue); color:var(--neon-blue); font-weight:600;">');
+        cells.forEach(c => html.push(`<th style="padding:6px 10px; text-align:left;">${escapeHtml(c)}</th>`));
+        html.push('</tr>');
+      } else {
+        html.push('<tr style="border-bottom:1px solid rgba(255,255,255,0.06);">');
+        cells.forEach(c => html.push(`<td style="padding:6px 10px;">${escapeHtml(c)}</td>`));
+        html.push('</tr>');
+      }
+    } else {
+      if(inTable) {
+        html.push('</table></div>');
+        inTable = false;
+        tableHeaderParsed = false;
+      }
+      if(!rawLine) {
+        html.push('<div style="height:0.5rem"></div>');
+      } else if(rawLine.startsWith('### ')) {
+        html.push(`<h4 style="color:var(--neon-blue); margin:0.6rem 0 0.3rem;">${escapeHtml(rawLine.slice(4))}</h4>`);
+      } else if(rawLine.startsWith('## ') || rawLine.startsWith('# ')) {
+        html.push(`<h3 style="color:var(--neon-blue); margin:0.8rem 0 0.4rem;">${escapeHtml(rawLine.replace(/^#+\s*/, ''))}</h3>`);
+      } else if(rawLine.startsWith('- ') || rawLine.startsWith('* ')) {
+        let boldFormatted = escapeHtml(rawLine.slice(2)).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html.push(`<li style="margin-left:1.2rem; line-height:1.6;">${boldFormatted}</li>`);
+      } else {
+        let boldFormatted = escapeHtml(rawLine).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html.push(`<p style="line-height:1.6; margin-bottom:0.35rem;">${boldFormatted}</p>`);
+      }
+    }
+  }
+  if(inTable) {
+    html.push('</table></div>');
+  }
+  return html.join('');
+}
+
+function pluralize(count, singular, plural=`${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function showAdminToast(message, tone='info') {
+  const stack = document.getElementById('admin-toast-stack');
+  if(!stack) return;
+
+  const toast = document.createElement('div');
+  toast.className = `admin-toast ${tone}`;
+  toast.textContent = message;
+  stack.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-6px)';
+  }, 2800);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+function openAdminModal({
+  title,
+  message,
+  confirmLabel='Confirm',
+  confirmClass='action-btn',
+  requireInput=false,
+  inputLabel='Value',
+  inputType='text',
+  inputPlaceholder='',
+  onConfirm,
+}) {
+  adminModalState.action = onConfirm;
+  adminModalState.requireInput = requireInput;
+  adminModalState.submitting = false;
+
+  document.getElementById('admin-modal-title').textContent = title;
+  document.getElementById('admin-modal-message').textContent = message;
+  document.getElementById('admin-modal-error').textContent = '';
+
+  const field = document.getElementById('admin-modal-field');
+  const label = document.getElementById('admin-modal-label');
+  const input = document.getElementById('admin-modal-input');
+  const confirmBtn = document.getElementById('admin-modal-confirm-btn');
+
+  confirmBtn.textContent = confirmLabel;
+  confirmBtn.className = confirmClass;
+  confirmBtn.disabled = false;
+
+  if(requireInput) {
+    field.style.display = 'grid';
+    label.textContent = inputLabel;
+    input.type = inputType;
+    input.placeholder = inputPlaceholder;
+    input.value = '';
+  } else {
+    field.style.display = 'none';
+    input.value = '';
+  }
+
+  document.getElementById('admin-action-modal').classList.add('active');
+  if(requireInput) {
+    setTimeout(() => input.focus(), 0);
+  }
+}
+
+function closeAdminModal() {
+  document.getElementById('admin-action-modal').classList.remove('active');
+  document.getElementById('admin-modal-error').textContent = '';
+  adminModalState.action = null;
+  adminModalState.requireInput = false;
+  adminModalState.submitting = false;
+}
+
+function handleAdminModalBackdrop(event) {
+  if(event.target === event.currentTarget && !adminModalState.submitting) {
+    closeAdminModal();
+  }
+}
+
+async function confirmAdminModal() {
+  if(adminModalState.submitting || typeof adminModalState.action !== 'function') return;
+
+  const input = document.getElementById('admin-modal-input');
+  const errorEl = document.getElementById('admin-modal-error');
+  const confirmBtn = document.getElementById('admin-modal-confirm-btn');
+  const value = input.value.trim();
+
+  if(adminModalState.requireInput && !value) {
+    errorEl.textContent = 'This field is required.';
+    input.focus();
+    return;
+  }
+
+  adminModalState.submitting = true;
+  errorEl.textContent = '';
+  confirmBtn.disabled = true;
+
+  try {
+    await adminModalState.action(value);
+    closeAdminModal();
+  } catch (error) {
+    errorEl.textContent = error.message || 'Action failed.';
+    confirmBtn.disabled = false;
+    adminModalState.submitting = false;
+  }
+}
+
+document.addEventListener('keydown', event => {
+  const overlay = document.getElementById('admin-action-modal');
+  if(!overlay?.classList.contains('active')) return;
+
+  if(event.key === 'Escape' && !adminModalState.submitting) {
+    closeAdminModal();
+  }
+  if(event.key === 'Enter' && document.activeElement?.id === 'admin-modal-input') {
+    confirmAdminModal();
+  }
+});
+
+function insightSourceLabel(result) {
+  if(result.provider_label) return result.provider_label;
+  return result.source === 'groq' ? 'Groq AI' : 'Local support guidance';
+}
+
+function heatTier(ratio) {
+  if(ratio >= 0.75) return 'hot';
+  if(ratio >= 0.45) return 'warm';
+  return 'cool';
+}
+
+async function apiJson(url, options={}) {
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { detail: text || 'Unexpected response from server.' };
+  }
+  if(!response.ok) {
+    throw new Error(data.detail || `Request failed (${response.status})`);
+  }
+  return data;
+}
+
+function normalizeStatus(status) {
+  return status === 'in_progress' ? 'progress' : (status || 'open');
+}
+
+function statusLabel(status) {
+  const normalized = normalizeStatus(status);
+  if(normalized === 'progress') return 'IN PROGRESS';
+  return normalized.toUpperCase();
+}
+
+function statusPill(status) {
+  const normalized = normalizeStatus(status);
+  return `<span class="pill pill-${normalized}">${statusLabel(status)}</span>`;
+}
+
+function priPill(priority) {
+  const normalized = priority === 'High' ? 'high' : priority === 'Medium' ? 'med' : 'low';
+  return `<span class="pill pill-${normalized}">${escapeHtml(priority)}</span>`;
+}
+
+function formatDate(value) {
+  if(!value) return 'N/A';
+  let raw = String(value);
+  // Server stores UTC without 'Z'; append it so the browser converts to local PC time
+  if(!raw.endsWith('Z') && !raw.includes('+') && !raw.includes('-', 10)) raw += 'Z';
+  const date = new Date(raw);
+  if(Number.isNaN(date.getTime())) return escapeHtml(value);
+  return date.toLocaleString();
+}
+
+function hoursBetween(start, end) {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if(Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return 0;
+  return Math.max(0, (endDate - startDate) / 3600000);
+}
+
+function roleLabel(role) {
+  if(role === 'tech' || role === 'technician') return 'Technician';
+  if(!role) return 'Unknown';
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
+function roleClass(role) {
+  const normalized = String(role || '').toLowerCase();
+  if(normalized === 'technician') return 'role-technician';
+  if(normalized === 'tech') return 'role-tech';
+  return `role-${normalized || 'unknown'}`;
+}
+
+function specializationLabel(value) {
+  const normalized = String(value || 'general').replace(/_/g, ' ');
+  return normalized.replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function humanizeIssue(label) {
+  return String(label || 'other').replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function latestSupportReply(ticket) {
+  const replies = Array.isArray(ticket?.replies) ? ticket.replies : [];
+  const supportReplies = replies.filter(reply => ['tech', 'technician', 'admin'].includes(String(reply.author_role || '').toLowerCase()));
+  return supportReplies.length ? supportReplies[supportReplies.length - 1] : null;
+}
+
+function repliesMarkup(ticket) {
+  const replies = Array.isArray(ticket?.replies) ? ticket.replies : [];
+  if(!replies.length) {
+    return `<div class="reply-empty">No ticket replies have been recorded yet.</div>`;
+  }
+
+  return `<div class="reply-stack">${
+    replies.map(reply => `
+      <div class="reply-card">
+        <div class="reply-meta">
+          <div class="reply-author">
+            ${escapeHtml(reply.author_name || reply.author_username || 'Unknown')}
+            <span class="reply-role ${roleClass(reply.author_role)}">${escapeHtml(roleLabel(reply.author_role))}</span>
+          </div>
+          <div class="reply-time">${escapeHtml(formatDate(reply.created_at))}</div>
+        </div>
+        <div class="reply-message">${nl2br(reply.message || '')}</div>
+      </div>
+    `).join('')
+  }</div>`;
+}
+
+function circularExpiryLabel(circular) {
+  if(!circular?.expires_at) return 'Never';
+  return formatDate(circular.expires_at);
+}
+
+function settledValue(result, fallback) {
+  return result && result.status === 'fulfilled' ? result.value : fallback;
+}
+
+function switchTab(tab, el) {
+  state.currentTab = tab;
+  document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+  const panel = document.getElementById(`panel-${tab}`);
+  if(panel) panel.classList.add('active');
+
+  const navItem = el || document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  if(navItem) navItem.classList.add('active');
+}
+
+function buildTicketTable(tbodyId, tickets) {
+  const tbody = document.getElementById(tbodyId);
+  const colspan = tbodyId === 'ticket-tbody' ? 8 : 9;
+
+  if(!tickets.length) {
+    tbody.innerHTML = `<tr><td colspan="${colspan}" style="color:var(--text-dim);text-align:center;padding:1rem;">No tickets available yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = tickets.map(ticket => `
+    <tr>
+      <td class="tid">#${escapeHtml(ticket.ticket_id)}</td>
+      <td>${escapeHtml(ticket.employee_name || ticket.employee_id || 'Unknown')}</td>
+      <td><span style="color:var(--text-bright)">${escapeHtml(ticket.category)}</span></td>
+      <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(ticket.description)}</td>
+      <td>${priPill(ticket.priority)}</td>
+      <td>${statusPill(ticket.status)}</td>
+      ${tbodyId === 'all-tickets-body'
+        ? `<td style="color:var(--text-dim);font-size:0.72rem">${escapeHtml(formatDate(ticket.created_at))}</td>`
+        : `<td style="color:var(--text-dim);font-size:0.72rem">${escapeHtml(ticket.assigned_to || 'Unassigned')}</td>`}
+      ${tbodyId === 'all-tickets-body'
+        ? `<td style="color:var(--text-dim);font-size:0.72rem">${escapeHtml(ticket.assigned_to || 'Unassigned')}</td>`
+        : ''}
+      <td><button class="tbl-action" onclick="viewTicket('${escapeHtml(ticket.ticket_id)}')">View</button></td>
+    </tr>
+  `).join('');
+}
+
+function buildBarChart(containerId, data) {
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  if(!data.length) {
+    container.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No chart data yet.</div>`;
+    return;
+  }
+
+  const totals = data.map(item => CATEGORY_ORDER.reduce((sum, key) => sum + (item[key.toLowerCase()] || 0), 0));
+  const maxVal = Math.max(...totals, 1);
+
+  container.innerHTML = data.map((item, index) => {
+    const total = totals[index];
+    const height = Math.max(6, Math.round((total / maxVal) * 120));
+    return `<div class="bar-group">
+      <div class="bar-wrap">
+        <div class="bar bar-network" style="height:${height}px" data-val="${total} tickets" title="${escapeHtml(item.label)}: ${total}"></div>
+      </div>
+      <div class="bar-label">${escapeHtml(item.label)}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildDonut(distribution) {
+  const wrap = document.getElementById('donut-wrap');
+  const total = CATEGORY_ORDER.reduce((sum, category) => sum + (distribution[category] || 0), 0);
+
+  if(total === 0) {
+    wrap.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No category data available yet.</div>`;
+    return;
+  }
+
+  const circumference = 2 * Math.PI * 40;
+  let offset = 0;
+
+  const circles = CATEGORY_ORDER.map(category => {
+    const count = distribution[category] || 0;
+    if(!count) return '';
+    const dash = (count / total) * circumference;
+    const circle = `<circle cx="55" cy="55" r="40" fill="none" stroke="${CATEGORY_COLORS[category]}" stroke-width="18" stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 55 55)"/>`;
+    offset += dash;
+    return circle;
+  }).join('');
+
+  const legend = CATEGORY_ORDER.map(category => {
+    const count = distribution[category] || 0;
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    return `<div class="legend-item"><div class="legend-dot" style="background:${CATEGORY_COLORS[category]}"></div>${category}<span class="legend-pct">${pct}%</span></div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <svg class="donut-svg" width="110" height="110" viewBox="0 0 110 110">
+      <circle cx="55" cy="55" r="40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="18"/>
+      ${circles}
+      <text x="55" y="52" text-anchor="middle" fill="#e8f4ff" font-size="11" font-family="Orbitron">${total}</text>
+      <text x="55" y="64" text-anchor="middle" fill="#5a7a9a" font-size="7" font-family="Share Tech Mono">TOTAL</text>
+    </svg>
+    <div class="donut-legend">${legend}</div>
+  `;
+}
+
+function ticketsByRecentWeek() {
+  const today = new Date();
+  const items = [];
+
+  for(let offset = 6; offset >= 0; offset -= 1) {
+    const day = new Date(today);
+    day.setHours(0, 0, 0, 0);
+    day.setDate(today.getDate() - offset);
+
+    const nextDay = new Date(day);
+    nextDay.setDate(day.getDate() + 1);
+
+    const counts = { label: day.toLocaleDateString([], { weekday: 'short' }), network: 0, software: 0, hardware: 0, printer: 0, other: 0 };
+    state.tickets.forEach(ticket => {
+      const created = new Date(ticket.created_at);
+      if(created >= day && created < nextDay) {
+        const key = (ticket.category || 'Other').toLowerCase();
+        if(counts[key] !== undefined) counts[key] += 1;
+      }
+    });
+    items.push(counts);
+  }
+  return items;
+}
+
+function renderTechnicianMetrics(containerId, detailed=false) {
+  const container = document.getElementById(containerId);
+  const grouped = {};
+
+  state.tickets.forEach(ticket => {
+    const tech = ticket.assigned_to || 'Unassigned';
+    if(!grouped[tech]) grouped[tech] = { name: tech, total: 0, resolved: 0, open: 0 };
+    grouped[tech].total += 1;
+    if(normalizeStatus(ticket.status) === 'resolved') grouped[tech].resolved += 1;
+    if(['open', 'progress'].includes(normalizeStatus(ticket.status))) grouped[tech].open += 1;
+  });
+
+  const techs = Object.values(grouped).sort((a, b) => b.total - a.total);
+  if(!techs.length) {
+    container.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No technician activity yet.</div>`;
+    return;
+  }
+
+  if(detailed) {
+    container.innerHTML = techs.map(tech => `
+      <div style="padding:0.9rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;gap:1rem;">
+        <div>
+          <div style="font-size:0.82rem;font-weight:600;">${escapeHtml(tech.name)}</div>
+          <div style="font-size:0.68rem;color:var(--text-dim);">Resolved: ${tech.resolved} | Active: ${tech.open}</div>
+        </div>
+        <div style="font-family:'Orbitron',sans-serif;color:var(--neon-blue);">${tech.total}</div>
+      </div>
+    `).join('');
+    return;
+  }
+
+  container.innerHTML = techs.map(tech => {
+    const pct = tech.total ? Math.round((tech.resolved / tech.total) * 100) : 0;
+    return `
+      <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.9rem;">
+        <div style="width:90px;font-size:0.75rem;color:var(--text-dim)">${escapeHtml(tech.name)}</div>
+        <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:8px;overflow:hidden;">
+          <div style="width:${pct}%;background:linear-gradient(90deg,var(--neon-blue),var(--neon-green));height:100%;border-radius:4px;"></div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--neon-green);width:36px">${tech.resolved}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTechnicianAssignments() {
+  const container = document.getElementById('tech-assignment-view');
+  if(!container) return;
+
+  const assignmentData = state.technicianAssignments;
+  const technicians = assignmentData?.technicians || state.users
+    .filter(user => user.role === 'technician' || user.role === 'tech')
+    .map(user => ({ ...user, active_count: 0, tickets: [] }));
+
+  if(!technicians.length) {
+    container.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No technicians have been created yet.</div>`;
+    return;
+  }
+
+  const unassigned = assignmentData?.unassigned || state.tickets.filter(ticket => !ticket.assigned_to && ['open', 'progress'].includes(normalizeStatus(ticket.status)));
+  container.innerHTML = `
+    <div class="data-stack">
+      ${technicians.map(tech => `
+        <div class="data-row">
+          <div class="data-main">
+            <div class="data-title">${escapeHtml(tech.name || tech.username)}</div>
+            <div class="data-sub">${escapeHtml(tech.username)} · <span class="role-chip">${escapeHtml(specializationLabel(tech.specialization))}</span> · ${escapeHtml(tech.active_count || 0)} active assigned</div>
+            ${(tech.tickets || []).slice(0, 3).map(ticket => `
+              <div class="data-sub">#${escapeHtml(ticket.ticket_id)} · ${escapeHtml(ticket.category || 'Other')} · ${escapeHtml(statusLabel(ticket.status))}</div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <div class="data-row">
+        <div class="data-main">
+          <div class="data-title">Unassigned Queue</div>
+          <div class="data-sub">${escapeHtml(unassigned.length)} active tickets waiting for assignment</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPredictionLogs() {
+  const tbody = document.getElementById('prediction-logs-body');
+  const routing = document.getElementById('prediction-routing-summary');
+  if(!tbody || !routing) return;
+
+  if(!state.predictionLogs.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-dim);text-align:center;padding:1rem;">No image predictions have been logged yet.</td></tr>`;
+    routing.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No image-based routing data is available yet.</div>`;
+    return;
+  }
+
+  tbody.innerHTML = state.predictionLogs.map(log => `
+    <tr>
+      <td style="color:var(--text-dim);font-size:0.72rem">${escapeHtml(formatDate(log.created_at))}</td>
+      <td>${escapeHtml(log.created_by || 'Unknown')}</td>
+      <td>${escapeHtml(humanizeIssue(log.confirmed_label || log.predicted_label))}</td>
+      <td>${escapeHtml(Math.round((log.confidence || 0) * 100))}%</td>
+      <td>${escapeHtml((log.issue_resolution_status || 'pending').replace(/_/g, ' '))}</td>
+      <td>${log.ticket_id ? `<span class="tid">#${escapeHtml(log.ticket_id)}</span>` : '<span style="color:var(--text-dim)">No ticket</span>'}</td>
+      <td>${escapeHtml(log.assigned_to || specializationLabel(log.technician_specialization))}</td>
+    </tr>
+  `).join('');
+
+  const byStatus = state.predictionLogs.reduce((acc, log) => {
+    const key = log.issue_resolution_status || 'pending';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  routing.innerHTML = `
+    <div class="metric-list">
+      ${Object.entries(byStatus).map(([status, count]) => `
+        <div class="metric-row">
+          <div class="metric-label">${escapeHtml(status.replace(/_/g, ' '))}</div>
+          <div class="metric-track"><div class="metric-fill" style="width:${Math.max(6, Math.round((count / state.predictionLogs.length) * 100))}%"></div></div>
+          <div class="metric-value">${escapeHtml(count)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderTicketDetail(ticket) {
+  const card = document.getElementById('ticket-detail-card');
+  const content = document.getElementById('ticket-detail-content');
+  const latestReply = latestSupportReply(ticket);
+
+  // Build technician options from state.users
+  const technicians = state.users.filter(u => u.role === 'technician' || u.role === 'tech');
+  const techOptions = technicians.map(t =>
+    `<option value="${escapeHtml(t.name || t.username)}" ${(ticket.assigned_to || '') === (t.name || t.username) ? 'selected' : ''}>${escapeHtml(t.name || t.username)} (${escapeHtml(specializationLabel(t.specialization))})</option>`
+  ).join('');
+
+  const isResolved = normalizeStatus(ticket.status) === 'resolved' || normalizeStatus(ticket.status) === 'closed';
+
+  card.style.display = 'block';
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.9rem 1.4rem;">
+      <div><div class="form-label">Ticket</div><div>#${escapeHtml(ticket.ticket_id)}</div></div>
+      <div><div class="form-label">Employee</div><div>${escapeHtml(ticket.employee_name || ticket.employee_id || 'Unknown')}</div></div>
+      <div><div class="form-label">Category</div><div>${escapeHtml(ticket.category)}</div></div>
+      <div><div class="form-label">Priority</div><div>${escapeHtml(ticket.priority)}</div></div>
+      <div><div class="form-label">Location</div><div>${escapeHtml(ticket.location || 'Not provided')}</div></div>
+      <div><div class="form-label">Status</div><div>${escapeHtml(statusLabel(ticket.status))}</div></div>
+      <div style="grid-column:1/-1;padding:0.9rem;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.12);border-radius:12px;">
+        <div class="form-label" style="margin-bottom:0.5rem;">Assign / Reassign Technician</div>
+        <div style="display:flex;gap:0.7rem;align-items:center;flex-wrap:wrap;">
+          <div style="font-size:0.72rem;color:var(--text-dim);">Current: <strong style="color:var(--text-bright)">${escapeHtml(ticket.assigned_to || 'Unassigned')}</strong></div>
+          <select id="reassign-tech-select" style="flex:1;min-width:180px;background:rgba(4,8,20,0.9);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text-bright);padding:0.5rem 0.7rem;font-family:'Exo 2',sans-serif;font-size:0.78rem;outline:none;" ${isResolved ? 'disabled' : ''}>
+            <option value="">Select Technician</option>
+            ${techOptions}
+          </select>
+          <button class="action-btn" onclick="reassignTicket('${escapeHtml(ticket.ticket_id)}')" ${isResolved ? 'disabled style="opacity:0.4"' : ''}>Reassign</button>
+        </div>
+        <div style="font-size:0.62rem;color:var(--text-dim);margin-top:0.4rem;">AI auto-assigned to <strong>${escapeHtml(specializationLabel(ticket.technician_specialization))}</strong> specialization${ticket.assigned_to ? (' \u2192 ' + escapeHtml(ticket.assigned_to)) : ''}</div>
+      </div>
+      <div><div class="form-label">AI Issue</div><div>${ticket.predicted_issue ? escapeHtml(humanizeIssue(ticket.predicted_issue)) : 'None'}</div></div>
+      <div><div class="form-label">Tech Specialization</div><div>${escapeHtml(specializationLabel(ticket.technician_specialization))}</div></div>
+      <div><div class="form-label">AI Confidence</div><div>${ticket.prediction_confidence !== null && ticket.prediction_confidence !== undefined ? escapeHtml(Math.round(ticket.prediction_confidence * 100)) + '%' : 'N/A'}</div></div>
+      <div><div class="form-label">Image Prediction ID</div><div>${ticket.image_prediction_id ? escapeHtml(ticket.image_prediction_id) : 'N/A'}</div></div>
+      <div><div class="form-label">Uploaded Image</div><div>${ticket.uploaded_image_url ? '<a href="' + escapeHtml(ticket.uploaded_image_url) + '" target="_blank" style="color:var(--neon-blue);">View image</a>' : 'N/A'}</div></div>
+      <div style="grid-column:1/-1;"><div class="form-label">Description</div><div style="line-height:1.7;">${escapeHtml(ticket.description)}</div></div>
+      <div style="grid-column:1/-1;"><div class="form-label">Auto Fix</div><div style="line-height:1.7;color:var(--text-dim);">${ticket.auto_fix ? nl2br(ticket.auto_fix) : 'No auto-fix recorded.'}</div></div>
+      <div style="grid-column:1/-1;"><div class="form-label">Resolution</div><div style="line-height:1.7;color:var(--text-dim);">${ticket.resolution ? nl2br(ticket.resolution) : 'No resolution note yet.'}</div></div>
+      <div style="grid-column:1/-1;">
+        <div class="form-label">Latest Support Reply</div>
+        ${latestReply ? `
+          <div class="reply-card highlight">
+            <div class="reply-meta">
+              <div class="reply-author">
+                ${escapeHtml(latestReply.author_name || latestReply.author_username || 'Unknown')}
+                <span class="reply-role ${roleClass(latestReply.author_role)}">${escapeHtml(roleLabel(latestReply.author_role))}</span>
+              </div>
+              <div class="reply-time">${escapeHtml(formatDate(latestReply.created_at))}</div>
+            </div>
+            <div class="reply-message">${nl2br(latestReply.message || '')}</div>
+          </div>
+        ` : '<div class="reply-empty">No technician or admin reply has been sent to the employee yet.</div>'}
+      </div>
+      <div style="grid-column:1/-1;">
+        <div class="form-label">Ticket Conversation</div>
+        ${repliesMarkup(ticket)}
+      </div>
+      <div style="grid-column:1/-1;padding-top:0.9rem;border-top:1px solid rgba(255,255,255,0.06);">
+        <div class="form-label">Ticket Retention Control</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end;">
+          <div>
+            <div class="form-label" style="margin-bottom:0.4rem;">Keep In Trash</div>
+            <input id="delete-retention-value" type="number" min="1" value="30" style="width:92px;background:rgba(4,8,20,0.9);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text-bright);padding:0.55rem 0.7rem;font-family:'Exo 2',sans-serif;outline:none;"/>
+          </div>
+          <div>
+            <div class="form-label" style="margin-bottom:0.4rem;">Unit</div>
+            <select id="delete-retention-unit" style="background:rgba(4,8,20,0.9);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text-bright);padding:0.55rem 0.8rem;font-family:'Exo 2',sans-serif;outline:none;">
+              <option value="days">Days</option>
+              <option value="months">Months</option>
+              <option value="years">Years</option>
+            </select>
+          </div>
+          <button class="danger-btn" onclick='moveTicketToTrash(${JSON.stringify(ticket.ticket_id)})'>Move to Recently Deleted</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function reassignTicket(ticketId) {
+  const select = document.getElementById('reassign-tech-select');
+  const newTech = select ? select.value : '';
+  if(!newTech) {
+    showAdminToast('Select a technician to assign.', 'info');
+    return;
+  }
+
+  try {
+    await apiJson('/api/tickets/' + encodeURIComponent(ticketId), {
+      method: 'PATCH',
+      body: JSON.stringify({ assigned_to: newTech }),
+    });
+    showAdminToast('Ticket ' + ticketId + ' reassigned to ' + newTech + '.', 'success');
+    await refreshDashboard();
+    viewTicket(ticketId);
+  } catch (error) {
+    showAdminToast(error.message, 'error');
+  }
+}
+
+function viewTicket(ticketId) {
+  const ticket = state.tickets.find(item => item.ticket_id === ticketId);
+  if(!ticket) return;
+  renderTicketDetail(ticket);
+  switchTab('tickets');
+}
+
+function renderTrashTable() {
+  const tbody = document.getElementById('deleted-tickets-body');
+  if(!state.deletedTickets.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--text-dim);text-align:center;padding:1rem;">No tickets are waiting in Recently Deleted.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = state.deletedTickets.map(ticket => `
+    <tr>
+      <td class="tid">#${escapeHtml(ticket.ticket_id)}</td>
+      <td>${escapeHtml(ticket.employee_name || ticket.employee_id || 'Unknown')}</td>
+      <td>${escapeHtml(ticket.deleted_by || 'admin')}</td>
+      <td style="color:var(--text-dim);font-size:0.72rem">${escapeHtml(formatDate(ticket.deleted_at))}</td>
+      <td style="color:var(--text-dim);font-size:0.72rem">${escapeHtml(formatDate(ticket.purge_after_at))}</td>
+      <td style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+        <button class="action-btn" onclick='restoreDeletedTicket(${JSON.stringify(ticket.ticket_id)})'>Restore</button>
+        <button class="danger-btn" onclick='permanentlyDeleteTicket(${JSON.stringify(ticket.ticket_id)})'>Delete Forever</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function computeAvgResolutionHours() {
+  const resolved = state.tickets.filter(ticket => ticket.resolved_at && ticket.created_at);
+  if(!resolved.length) return 0;
+  const totalHours = resolved.reduce((sum, ticket) => sum + hoursBetween(ticket.created_at, ticket.resolved_at), 0);
+  return totalHours / resolved.length;
+}
+
+function computeApproxFirstResponseMinutes() {
+  const resolvedHours = computeAvgResolutionHours();
+  if(!resolvedHours) return 0;
+  return Math.max(5, Math.round((resolvedHours * 60) / 3));
+}
+
+function computeSlaBreaches() {
+  const now = new Date();
+  return state.tickets.filter(ticket => {
+    if(!ticket.created_at) return false;
+    const ageHours = ticket.resolved_at
+      ? hoursBetween(ticket.created_at, ticket.resolved_at)
+      : hoursBetween(ticket.created_at, now.toISOString());
+    return ageHours > 8;
+  }).length;
+}
+
+function updateOverview() {
+  const avgResolution = computeAvgResolutionHours();
+  const total = state.stats?.total || state.tickets.length;
+  const resolved = state.stats?.resolved || 0;
+  const open = state.stats?.open || state.tickets.filter(ticket => ['open', 'progress'].includes(normalizeStatus(ticket.status))).length;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-resolved').textContent = resolved;
+  document.getElementById('stat-open').textContent = open;
+  document.getElementById('stat-resolution').textContent = `${avgResolution ? avgResolution.toFixed(1) : '0.0'}h`;
+  document.getElementById('stat-total-sub').textContent = `${state.tickets.length} active tickets loaded${state.deletedTickets.length ? ` · ${state.deletedTickets.length} in Recently Deleted` : ''}`;
+  document.getElementById('stat-resolved-sub').textContent = `${state.stats?.today || 0} created today`;
+  document.getElementById('stat-open-sub').textContent = `${open} items currently need attention`;
+  document.getElementById('stat-resolution-sub').textContent = 'Computed from resolved ticket history';
+
+  buildTicketTable('ticket-tbody', state.tickets.slice(0, 6));
+  buildTicketTable('all-tickets-body', state.tickets);
+  buildBarChart('bar-chart', ticketsByRecentWeek());
+  buildDonut(state.categoryDistribution);
+}
+
+function updateAnalytics() {
+  document.getElementById('analytics-auto').textContent = state.tickets.filter(ticket => ticket.auto_resolved).length;
+  document.getElementById('analytics-duplicates').textContent = state.tickets.filter(ticket => ticket.is_duplicate).length;
+  document.getElementById('analytics-response').textContent = `${computeApproxFirstResponseMinutes()}m`;
+  document.getElementById('analytics-sla').textContent = computeSlaBreaches();
+
+  const daily = state.dailyVolume.map(item => ({
+    label: new Date(item.date).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+    network: item.count,
+    software: 0,
+    hardware: 0,
+    printer: 0,
+    other: 0,
+  }));
+  buildBarChart('daily-chart', daily);
+  renderTechnicianMetrics('tech-perf');
+  renderTechnicianMetrics('tech-workload', true);
+  renderHeatmap();
+}
+
+function renderHeatmap() {
+  const issuesEl = document.getElementById('heatmap-issues');
+  const locationsEl = document.getElementById('heatmap-locations');
+  const departments = Object.entries(state.heatmap?.department_distribution || {});
+  const deptBreakdown = state.heatmap?.department_category_breakdown || {};
+  const locations = Object.entries(state.heatmap?.location_distribution || {});
+  const breakdown = state.heatmap?.location_category_breakdown || {};
+  const unresolved = state.tickets.filter(ticket => ['open', 'progress'].includes(normalizeStatus(ticket.status)));
+  const agingBuckets = [
+    { label: '0-4h', maxHours: 4 },
+    { label: '4-24h', maxHours: 24 },
+    { label: '1-3d', maxHours: 72 },
+    { label: '3d+', maxHours: Infinity },
+  ];
+
+  const agingRows = CATEGORY_ORDER.map(category => ({
+    category,
+    counts: agingBuckets.map(() => 0),
+    total: 0,
+  }));
+
+  unresolved.forEach(ticket => {
+    const category = CATEGORY_ORDER.includes(ticket.category) ? ticket.category : 'Other';
+    const row = agingRows.find(item => item.category === category);
+    const createdAt = new Date(ticket.created_at);
+    const ageHours = Number.isNaN(createdAt.getTime()) ? 0 : Math.max(0, (Date.now() - createdAt.getTime()) / 3600000);
+    const bucketIndex = agingBuckets.findIndex(bucket => ageHours < bucket.maxHours);
+    const index = bucketIndex === -1 ? agingBuckets.length - 1 : bucketIndex;
+    row.counts[index] += 1;
+    row.total += 1;
+  });
+
+  const maxCell = Math.max(1, ...agingRows.flatMap(row => row.counts));
+
+  if(!unresolved.length) {
+  
+    issuesEl.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No open or in-progress tickets are aging in the queue right now.</div>`;
+  } else {
+    issuesEl.innerHTML = `
+      <div class="heat-subtitle">Unresolved tickets by category and age bucket</div>
+      <div class="aging-matrix">
+        <div class="aging-row aging-head">
+          <div class="aging-slot">Category</div>
+          ${agingBuckets.map(bucket => `<div class="aging-slot">${bucket.label}</div>`).join('')}
+          <div class="aging-slot">Total</div>
+        </div>
+        ${agingRows.map(row => `
+          <div class="aging-row">
+            <div class="aging-label">${escapeHtml(row.category)}</div>
+            ${row.counts.map(count => {
+              const ratio = count / maxCell;
+              const stateClass = count === 0 ? 'aging-empty' : ratio >= 0.75 ? 'aging-hot' : ratio >= 0.4 ? 'aging-warm' : 'aging-cool';
+              return `<div class="aging-slot ${stateClass}" style="--heat:${ratio.toFixed(2)}">${count ? `<span class="aging-count">${count}</span>` : '<span class="aging-empty">-</span>'}</div>`;
+            }).join('')}
+            <div class="aging-total">${row.total}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="data-sub" style="margin-top:0.9rem;">Use this matrix to spot backlog that is aging toward SLA breaches before it escalates.</div>
+    `;
+  }
+
+  if(!departments.length && !locations.length) {
+    locationsEl.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No department or location metadata has been captured yet.</div>`;
+    return;
+  }
+
+  const renderHeatTiles = (entries, entryBreakdown, emptyLabel) => {
+    if(!entries.length) {
+      return `<div style="color:var(--text-dim);font-size:0.75rem;">${emptyLabel}</div>`;
+    }
+    const sortedEntries = [...entries].sort((a, b) => b[1] - a[1]);
+    const maxCount = Math.max(...sortedEntries.map(([, count]) => count), 1);
+    return `<div class="heat-grid">${
+      sortedEntries.map(([label, count]) => `
+        <div class="heat-tile heat-${heatTier(count / maxCount)}" style="--heat:${(0.28 + (count / maxCount) * 0.72).toFixed(2)}">
+          <div class="heat-value">${count}</div>
+          <div class="heat-label">${escapeHtml(label)}</div>
+          <div class="heat-meta">${escapeHtml(
+            Object.entries(entryBreakdown[label] || {})
+              .sort((a, b) => b[1] - a[1])
+              .map(([category, value]) => `${category}: ${value}`)
+              .join(' · ') || 'No category mix yet.'
+          )}</div>
+          <div class="heat-badge">HOTSPOT</div>
+        </div>
+      `).join('')
+    }</div>`;
+  };
+
+  locationsEl.innerHTML = `
+    <div class="heat-section">
+      <div class="heat-subtitle">By Department</div>
+      ${renderHeatTiles(departments, deptBreakdown, 'No department distribution is available yet.')}
+    </div>
+    <div class="heat-section">
+      <div class="heat-subtitle">By Place / Location</div>
+      ${renderHeatTiles(locations, breakdown, 'No location distribution is available yet.')}
+    </div>
+  `;
+}
+
+function renderUsers() {
+  const container = document.getElementById('users-list');
+  if(!state.users.length) {
+    container.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No users found in the database.</div>`;
+    return;
+  }
+
+  container.innerHTML = state.users.map(user => `
+    <div class="data-row">
+      <div class="data-main">
+        <div class="data-title">${escapeHtml(user.name || user.username)}</div>
+        <div class="data-sub">${escapeHtml(user.username)} · <span class="role-chip">${escapeHtml(roleLabel(user.role))}</span> · ${escapeHtml(user.dept || 'No department')}${(user.role === 'technician' || user.role === 'tech') ? ` · <span class="role-chip">${escapeHtml(specializationLabel(user.specialization))}</span>` : ''}</div>
+      </div>
+      <div class="data-actions">
+        <button class="action-btn" onclick='resetUserPassword(${JSON.stringify(user.username)})'>Change Password</button>
+        ${user.username !== adminUser
+          ? `<button class="danger-btn" onclick='deleteUserAccount(${JSON.stringify(user.username)})'>Delete User</button>`
+          : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderResetRequests() {
+  const container = document.getElementById('reset-requests-list');
+  const pending = state.resetRequests.filter(request => request.status === 'pending');
+  if(!pending.length) {
+    container.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No pending reset requests right now.</div>`;
+    return;
+  }
+
+  container.innerHTML = pending.map(request => `
+    <div class="data-row">
+      <div class="data-main">
+        <div class="data-title">${escapeHtml(request.username)}</div>
+        <div class="data-sub">${escapeHtml(roleLabel(request.role))} · ${escapeHtml(formatDate(request.requested_at))}</div>
+        <div class="data-sub">${escapeHtml(request.note || 'No note provided.')}</div>
+      </div>
+      <div class="data-actions">
+        <button class="action-btn" onclick='resetUserPassword(${JSON.stringify(request.username)}, ${request.id})'>Approve Reset</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCirculars() {
+  const list = document.getElementById('circulars-list');
+  if(!state.circulars.length) {
+    list.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">No circulars sent yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = state.circulars.map(circular => {
+    const color = circular.priority === 'urgent' ? 'var(--neon-red)' : circular.priority === 'info' ? 'var(--neon-green)' : 'var(--neon-blue)';
+    return `
+      <div class="circular-item" style="--item-color:${color}">
+        <div class="circ-meta">
+          <div>
+            <div class="circ-subject">${escapeHtml(circular.subject)}</div>
+            <div class="circ-date">Sent by ${escapeHtml(circular.sent_by || 'admin')}</div>
+          </div>
+          <div class="circ-date">${escapeHtml(formatDate(circular.created_at))}</div>
+        </div>
+        <div class="circ-body">${nl2br(circular.body)}</div>
+        <div class="circ-footer">
+          <div class="circ-footer-left">
+            <span class="circ-to">To: <span>${escapeHtml(circular.target)}</span></span>
+            <span class="circ-expiry">Auto delete: ${escapeHtml(circularExpiryLabel(circular))}</span>
+            <span class="pill ${circular.priority === 'urgent' ? 'pill-high' : circular.priority === 'info' ? 'pill-open' : 'pill-resolved'}">${escapeHtml(circular.priority.toUpperCase())}</span>
+          </div>
+          <div class="circ-actions">
+            <button class="danger-btn" onclick="deleteCircular(${Number(circular.id)})">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSettings() {
+  const box = document.getElementById('settings-content');
+  const health = state.health;
+  if(!health) {
+    box.innerHTML = `<div style="color:var(--text-dim);font-size:0.75rem;">Health information is not available.</div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.4rem;">
+      <div><div class="form-label">Service Status</div><div>${escapeHtml(health.status)}</div></div>
+      <div><div class="form-label">Version</div><div>${escapeHtml(health.version)}</div></div>
+      <div><div class="form-label">Classifier</div><div>${escapeHtml(health.classifier.method)}</div></div>
+      <div><div class="form-label">Corpus Size</div><div>${escapeHtml(health.classifier.corpus_size)}</div></div>
+      <div><div class="form-label">Priority Features</div><div>${escapeHtml(health.classifier.priority_features)}</div></div>
+      <div><div class="form-label">Groq AI Configured</div><div>${health.groq_configured ? 'Yes' : 'No'}</div></div>
+      <div><div class="form-label">Users</div><div>${state.users.length}</div></div>
+      <div><div class="form-label">Pending Reset Requests</div><div>${state.resetRequests.filter(request => request.status === 'pending').length}</div></div>
+      <div><div class="form-label">Image Prediction Logs</div><div>${state.predictionLogs.length}</div></div>
+      <div><div class="form-label">Technicians</div><div>${state.users.filter(user => user.role === 'technician' || user.role === 'tech').length}</div></div>
+    </div>
+  `;
+}
+
+function renderInsightsPlaceholder() {
+  const total = state.stats?.total || 0;
+  const resolved = state.stats?.resolved || 0;
+  const open = state.stats?.open || 0;
+  document.getElementById('insights-output').innerHTML = `
+    <div class="ai-insight-box">
+      <div class="ai-insight-title">LIVE SYSTEM SUMMARY</div>
+      <div class="ai-insight-text">The live system currently has ${total} total tickets, ${resolved} resolved today, and ${open} still in the active queue. Use the insight buttons above to generate an AI summary, recommendations, or a report from the current database state.</div>
+    </div>
+  `;
+}
+
+function toggleTechnicianSpecialization() {
+  const role = document.getElementById('user-role').value;
+  const wrap = document.getElementById('technician-specialization-wrap');
+  if(!wrap) return;
+  wrap.style.display = role === 'technician' ? 'block' : 'none';
+}
+
+async function createUser() {
+  const payload = {
+    admin_username: adminUser,
+    name: document.getElementById('user-name').value.trim(),
+    username: document.getElementById('user-username').value.trim().toLowerCase(),
+    password: document.getElementById('user-password').value,
+    role: document.getElementById('user-role').value,
+    dept: document.getElementById('user-dept').value.trim(),
+    specialization: document.getElementById('user-specialization').value,
+  };
+
+  if(!payload.name || !payload.username || !payload.password) {
+    alert('Name, username, and password are required.');
+    return;
+  }
+  if(payload.role === 'technician' && !payload.specialization) {
+    alert('Technician specialization is required.');
+    return;
+  }
+
+  try {
+    await apiJson('/api/admin/create-user', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    document.getElementById('user-name').value = '';
+    document.getElementById('user-username').value = '';
+    document.getElementById('user-password').value = '';
+    document.getElementById('user-dept').value = '';
+    document.getElementById('user-specialization').value = '';
+    toggleTechnicianSpecialization();
+    await refreshDashboard();
+    switchTab('users');
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function resetUserPassword(username, requestId=null) {
+  openAdminModal({
+    title: requestId ? 'Approve Reset Request' : 'Change User Password',
+    message: requestId
+      ? `Set a new password for ${username}. This will also mark the pending reset request as completed.`
+      : `Enter the new password for ${username}.`,
+    confirmLabel: requestId ? 'Approve Reset' : 'Update Password',
+    requireInput: true,
+    inputLabel: 'New Password',
+    inputType: 'password',
+    inputPlaceholder: 'Enter the new password',
+    onConfirm: async (newPassword) => {
+      await apiJson('/api/admin/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({
+          admin_username: adminUser,
+          username,
+          new_password: newPassword,
+          request_id: requestId,
+        }),
+      });
+      await refreshDashboard();
+      switchTab('users');
+      showAdminToast(
+        requestId
+          ? `Password updated for ${username} and the reset request was approved.`
+          : `Password updated for ${username}.`,
+        'success'
+      );
+    },
+  });
+}
+
+async function deleteUserAccount(username) {
+  openAdminModal({
+    title: 'Delete User',
+    message: `Delete ${username}? Employee tickets tied to that account may also be removed or unassigned depending on the role.`,
+    confirmLabel: 'Delete User',
+    confirmClass: 'danger-btn',
+    onConfirm: async () => {
+      const result = await apiJson('/api/admin/delete-user', {
+        method: 'POST',
+        body: JSON.stringify({
+          admin_username: adminUser,
+          username,
+        }),
+      });
+      await refreshDashboard();
+      switchTab('users');
+
+      const details = [];
+      if(result.deleted_tickets) details.push(`${pluralize(result.deleted_tickets, 'ticket')} removed`);
+      if(result.unassigned_tickets) details.push(`${pluralize(result.unassigned_tickets, 'active ticket')} unassigned`);
+      if(result.deleted_reset_requests) details.push(`${pluralize(result.deleted_reset_requests, 'reset request')} removed`);
+
+      showAdminToast(
+        details.length
+          ? `Deleted ${username}. ${details.join(', ')}.`
+          : `Deleted ${username}.`,
+        'success'
+      );
+    },
+  });
+}
+
+async function moveTicketToTrash(ticketId) {
+  const retentionValue = Number(document.getElementById('delete-retention-value')?.value || 30);
+  const retentionUnit = document.getElementById('delete-retention-unit')?.value || 'days';
+
+  if(!Number.isFinite(retentionValue) || retentionValue < 1) {
+    alert('Choose a retention value greater than zero.');
+    return;
+  }
+  if(!confirm(`Move ticket ${ticketId} to Recently Deleted for ${retentionValue} ${retentionUnit}?`)) return;
+
+  try {
+    const result = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}`, {
+      method: 'DELETE',
+      body: JSON.stringify({
+        admin_username: adminUser,
+        retention_value: retentionValue,
+        retention_unit: retentionUnit,
+      }),
+    });
+    document.getElementById('ticket-detail-card').style.display = 'none';
+    await refreshDashboard();
+    switchTab('tickets');
+    alert(result.message || `Ticket ${ticketId} moved to Recently Deleted.`);
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function restoreDeletedTicket(ticketId) {
+  try {
+    const result = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/restore`, {
+      method: 'POST',
+      body: JSON.stringify({
+        admin_username: adminUser,
+      }),
+    });
+    await refreshDashboard();
+    switchTab('tickets');
+    alert(result.message || `Ticket ${ticketId} restored.`);
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function permanentlyDeleteTicket(ticketId) {
+  if(!confirm(`Permanently delete ${ticketId}? This cannot be undone.`)) return;
+
+  try {
+    await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/permanent`, {
+      method: 'DELETE',
+      body: JSON.stringify({
+        admin_username: adminUser,
+      }),
+    });
+    await refreshDashboard();
+    switchTab('tickets');
+    alert(`Ticket ${ticketId} was permanently deleted.`);
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function generateInsight(type, showSpinner=true) {
+  const out = document.getElementById('insights-output');
+  if(showSpinner) {
+    out.innerHTML = `<div class="generating-badge"><div class="gen-dot"></div>Generating AI analysis from the live ticket database...</div>`;
+  }
+
+  try {
+    const result = await apiJson(`/api/insights?type=${encodeURIComponent(type)}`);
+    const sourceLabel = escapeHtml(insightSourceLabel(result));
+    const insightText = result.insight || '';
+
+    // Parse sections from AI output if possible
+    const sections = insightText.split(/\n(?=#{1,3}\s|\*\*[A-Z])/).filter(Boolean);
+    const hasMultipleSections = sections.length > 1;
+
+    let reportBody;
+    if(hasMultipleSections) {
+      reportBody = sections.map((section, i) => {
+        const lines = section.trim().split('\n');
+        const title = lines[0].replace(/^#+\s*/, '').replace(/^\*\*(.+?)\*\*$/, '$1').trim();
+        const body = lines.slice(1).join('\n').trim();
+        return `
+          <div class="report-section">
+            <div class="report-section-title"><div class="dot"></div>${escapeHtml(title)}</div>
+            <div class="ai-insight-text">${formatAiMarkdown(body || title)}</div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      reportBody = `<div class="ai-insight-text">${formatAiMarkdown(insightText)}</div>`;
+    }
+
+    out.innerHTML = `
+      <div class="ai-insight-box">
+        <div class="ai-insight-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+          <span>AI ANALYSIS RESULT · ${sourceLabel}</span>
+          <span style="font-size:0.58rem;color:var(--text-dim);font-weight:400;">${escapeHtml(new Date().toLocaleString())}</span>
+        </div>
+        ${reportBody}
+        ${result.fallback_reason ? `<div class="data-sub" style="margin-top:0.9rem;">Fallback reason: ${escapeHtml(result.fallback_reason)}</div>` : ''}
+        <div class="report-actions">
+          <button class="download-btn" onclick="downloadInsightPdf()">📥 Download as PDF</button>
+          <button class="ai-btn" onclick="generateInsight('${escapeHtml(type)}')">🔄 Regenerate</button>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    out.innerHTML = `<div class="ai-insight-box"><div class="ai-insight-title">INSIGHT ERROR</div><div class="ai-insight-text">${escapeHtml(error.message)}</div></div>`;
+  }
+}
+
+function downloadInsightPdf() {
+  // Use browser print to PDF approach
+  const originalTitle = document.title;
+  document.title = 'D Desk AI - AI Analysis Report';
+  window.print();
+  document.title = originalTitle;
+}
+
+async function sendCircular() {
+  const subject = document.getElementById('circ-subject').value.trim();
+  const target = document.getElementById('circ-target').value;
+  const priority = document.getElementById('circ-priority').value;
+  const expiryValue = document.getElementById('circ-expiry').value;
+  const body = document.getElementById('circ-body').value.trim();
+
+  if(!subject || !body) {
+    alert('Please fill in the subject and message.');
+    return;
+  }
+
+  const button = document.getElementById('circ-send-btn');
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = 'SENDING...';
+
+  try {
+    await apiJson('/api/circulars', {
+      method: 'POST',
+      body: JSON.stringify({
+        admin_username: adminUser,
+        subject,
+        body,
+        target,
+        priority,
+        expires_in_days: expiryValue ? Number(expiryValue) : null,
+      }),
+    });
+
+    document.getElementById('circ-subject').value = '';
+    document.getElementById('circ-body').value = '';
+    document.getElementById('circ-expiry').value = '';
+    button.textContent = 'BROADCAST SENT';
+    await refreshDashboard();
+    showAdminToast('Circular sent successfully.', 'success');
+  } catch (error) {
+    showAdminToast(error.message || 'Unable to send the circular.', 'error');
+  } finally {
+    setTimeout(() => {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }, 1200);
+  }
+}
+
+function deleteCircular(circularId) {
+  const circular = state.circulars.find(item => Number(item.id) === Number(circularId));
+  const subject = circular?.subject || `Circular #${circularId}`;
+  openAdminModal({
+    title: 'Delete Circular',
+    message: `Delete the circular "${subject}" now? Technicians will no longer see it in their notices feed.`,
+    confirmLabel: 'Delete Circular',
+    confirmClass: 'danger-btn',
+    onConfirm: async () => {
+      await apiJson(`/api/circulars/${encodeURIComponent(circularId)}?admin_username=${encodeURIComponent(adminUser)}`, {
+        method: 'DELETE',
+      });
+      await refreshDashboard();
+      switchTab('circulars');
+      showAdminToast(`Deleted circular "${subject}".`, 'success');
+    },
+  });
+}
+
+async function refreshDashboard() {
+  try {
+    const results = await Promise.allSettled([
+      apiJson('/api/tickets?limit=200&include_replies=true'),
+      apiJson('/api/tickets?deleted_only=true&limit=200'),
+      apiJson('/api/stats'),
+      apiJson('/api/analytics/category-distribution'),
+      apiJson('/api/analytics/daily-volume?days=14'),
+      apiJson('/api/circulars'),
+      apiJson('/api/health'),
+      apiJson(`/api/admin/users?admin_username=${encodeURIComponent(adminUser)}`),
+      apiJson(`/api/admin/reset-requests?admin_username=${encodeURIComponent(adminUser)}`),
+      apiJson(`/api/admin/heatmap?admin_username=${encodeURIComponent(adminUser)}`),
+      apiJson(`/api/admin/prediction-logs?admin_username=${encodeURIComponent(adminUser)}&limit=100`),
+      apiJson(`/api/admin/technician-assignments?admin_username=${encodeURIComponent(adminUser)}`),
+    ]);
+
+    state.tickets = settledValue(results[0], []);
+    state.deletedTickets = settledValue(results[1], []);
+    state.stats = settledValue(results[2], { total: 0, today: 0, resolved: 0, open: 0, auto_resolved: 0, deleted: 0 });
+    state.categoryDistribution = settledValue(results[3], {});
+    state.dailyVolume = settledValue(results[4], []);
+    state.circulars = settledValue(results[5], []);
+    state.health = settledValue(results[6], null);
+    state.users = settledValue(results[7], []);
+    state.resetRequests = settledValue(results[8], []);
+    state.heatmap = settledValue(results[9], null);
+    state.predictionLogs = settledValue(results[10], []);
+    state.technicianAssignments = settledValue(results[11], null);
+
+    updateOverview();
+    updateAnalytics();
+    renderCirculars();
+    renderTrashTable();
+    renderUsers();
+    renderResetRequests();
+    renderPredictionLogs();
+    renderTechnicianAssignments();
+    renderSettings();
+    renderInsightsPlaceholder();
+  } catch (error) {
+    document.getElementById('insights-output').innerHTML = `<div class="ai-insight-box"><div class="ai-insight-title">LIVE DATA ERROR</div><div class="ai-insight-text">${escapeHtml(error.message)}</div></div>`;
+  }
+}
+
+toggleTechnicianSpecialization();
+refreshDashboard();
+
+async function clearAllPredictionLogs() {
+  if(!confirm('Clear ALL prediction logs? This cannot be undone.')) return;
+  try {
+    const result = await apiJson('/api/admin/prediction-logs/clear', {
+      method: 'POST',
+      body: JSON.stringify({ admin_username: adminUser }),
+    });
+    showAdminToast(`Cleared ${result.deleted_count} prediction log(s).`, 'success');
+    await refreshDashboard();
+  } catch (error) {
+    showAdminToast(error.message, 'error');
+  }
+}
+</script>
+</body>
+</html>

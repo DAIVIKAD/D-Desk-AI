@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D Desk AI — Technician Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#04060f;--bg-mid:#07101e;--neon-blue:#00d4ff;--neon-green:#00ff88;
+    --neon-amber:#ffaa00;--neon-red:#ff4466;--text-bright:#e8f4ff;--text-dim:#5a7a9a;
+    --border-glow:rgba(0,212,255,0.18);--card-bg:rgba(8,16,38,0.85);
+    /* Retro terminal */
+    --term-bg:#0a0a00;--term-green:#39ff14;--term-dim:#1f6b0a;--term-amber:#c8a200;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Exo 2',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+  .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);}
+
+  /* TOPBAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.6rem;background:rgba(4,6,18,0.95);border-bottom:1px solid var(--border-glow);flex-shrink:0;z-index:50;}
+  .tb-left{display:flex;align-items:center;gap:1.2rem;}
+  .brand{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--neon-blue);}
+  .tech-badge{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);color:#ff6b35;font-size:0.6rem;padding:0.2rem 0.7rem;border-radius:20px;font-family:'Share Tech Mono',monospace;letter-spacing:0.1em;}
+  .tb-right{display:flex;align-items:center;gap:1rem;}
+  .tech-name{font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--neon-amber);display:flex;align-items:center;gap:0.4rem;}
+  .dot-tech{width:6px;height:6px;border-radius:50%;background:var(--neon-amber);box-shadow:0 0 6px var(--neon-amber);animation:blink 2s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .tb-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);padding:0.35rem 0.9rem;border-radius:6px;font-size:0.7rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
+  .tb-btn:hover{border-color:var(--neon-red);color:var(--neon-red);}
+
+  /* LAYOUT */
+  .layout{display:flex;flex:1;overflow:hidden;}
+
+  /* LEFT PANEL — Ticket Queue */
+  .left-panel{width:420px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border-glow);overflow:hidden;}
+
+  /* Summary row */
+  .summary-row{display:flex;gap:0;border-bottom:1px solid var(--border-glow);flex-shrink:0;}
+  .sum-box{flex:1;padding:0.8rem 1rem;text-align:center;border-right:1px solid var(--border-glow);}
+  .sum-box:last-child{border-right:none;}
+  .sum-val{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;}
+  .sum-label{font-size:0.58rem;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;font-family:'Share Tech Mono',monospace;margin-top:0.2rem;}
+
+  /* Filters */
+  .filter-bar{display:flex;gap:0.4rem;padding:0.8rem 1rem;border-bottom:1px solid var(--border-glow);flex-shrink:0;overflow-x:auto;}
+  .filter-chip{padding:0.25rem 0.7rem;border-radius:20px;font-size:0.65rem;cursor:pointer;border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);white-space:nowrap;transition:all 0.2s;font-family:'Share Tech Mono',monospace;}
+  .filter-chip.active{background:rgba(0,212,255,0.1);color:var(--neon-blue);border-color:rgba(0,212,255,0.3);}
+  .filter-chip:hover:not(.active){color:var(--text-bright);}
+
+  /* Ticket list */
+  .ticket-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+  .ticket-list::-webkit-scrollbar{width:3px;}
+  .ticket-list::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);}
+
+  .tk-item{padding:0.9rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:all 0.2s;position:relative;border-left:3px solid transparent;}
+  .tk-item:hover{background:rgba(0,212,255,0.04);}
+  .tk-item.active-ticket{background:rgba(0,212,255,0.07);border-left-color:var(--neon-blue);}
+  .tk-item.high-priority{border-left-color:var(--neon-red);}
+  .tk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;}
+  .tk-id{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--neon-blue);}
+  .tk-time{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);}
+  .tk-desc{font-size:0.78rem;color:var(--text-bright);margin-bottom:0.35rem;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tk-footer{display:flex;gap:0.5rem;align-items:center;}
+  .pill{display:inline-block;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.58rem;font-family:'Share Tech Mono',monospace;}
+  .pill-cat-network{background:rgba(0,212,255,0.1);color:var(--neon-blue);}
+  .pill-cat-software{background:rgba(123,79,255,0.1);color:#9b6fff;}
+  .pill-cat-hardware{background:rgba(255,170,0,0.1);color:var(--neon-amber);}
+  .pill-cat-printer{background:rgba(255,107,53,0.1);color:#ff6b35;}
+  .pill-cat-other{background:rgba(90,122,154,0.1);color:var(--text-dim);}
+  .pill-high{background:rgba(255,68,102,0.12);color:var(--neon-red);}
+  .pill-medium{background:rgba(255,170,0,0.1);color:var(--neon-amber);}
+  .pill-low{background:rgba(0,255,136,0.1);color:var(--neon-green);}
+  .pill-open{background:rgba(0,212,255,0.1);color:var(--neon-blue);}
+  .pill-progress{background:rgba(255,170,0,0.1);color:var(--neon-amber);}
+  .pill-resolved{background:rgba(0,255,136,0.1);color:var(--neon-green);}
+  .emp-name{font-size:0.68rem;color:var(--text-dim);}
+
+  /* RIGHT PANEL */
+  .right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+  /* Ticket detail area */
+  .detail-area{flex:1;overflow-y:auto;padding:1.3rem 1.5rem;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+  .detail-area::-webkit-scrollbar{width:3px;}
+
+  /* Detail card */
+  .detail-card{background:var(--card-bg);border:1px solid var(--border-glow);border-radius:16px;padding:1.4rem 1.6rem;margin-bottom:1.2rem;}
+  .detail-title{font-family:'Orbitron',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.12em;color:var(--neon-blue);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
+  .detail-title .dot{width:6px;height:6px;border-radius:50%;background:var(--neon-blue);box-shadow:0 0 6px var(--neon-blue);}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem 1.5rem;margin-bottom:1rem;}
+  .detail-field label{font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;display:block;margin-bottom:0.25rem;}
+  .detail-field p{font-size:0.85rem;}
+  .detail-desc{grid-column:1/-1;}
+  .detail-desc-text{background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:0.8rem 1rem;font-size:0.82rem;line-height:1.7;color:var(--text-bright);}
+
+  /* AI Suggestion in detail */
+  .ai-suggestion{background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.2);border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem;}
+  .ai-sug-title{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--neon-green);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem;}
+  .ai-sug-text{font-size:0.8rem;line-height:1.7;color:var(--text-bright);}
+
+  /* Status update form */
+  .status-form{display:flex;gap:0.8rem;align-items:center;margin-top:1rem;}
+  .status-select{background:rgba(0,0,0,0.3);border:1px solid var(--border-glow);color:var(--text-bright);padding:0.55rem 0.9rem;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:0.82rem;outline:none;cursor:pointer;}
+  .status-select:focus{border-color:var(--neon-blue);}
+  .update-btn{padding:0.55rem 1.2rem;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--neon-blue);border-radius:8px;font-family:'Orbitron',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;cursor:pointer;transition:all 0.25s;}
+  .update-btn:hover{background:rgba(0,212,255,0.2);box-shadow:0 0 15px rgba(0,212,255,0.2);}
+  .resolve-btn{padding:0.55rem 1.2rem;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--neon-green);border-radius:8px;font-family:'Orbitron',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;cursor:pointer;transition:all 0.25s;}
+  .resolve-btn:hover{background:rgba(0,255,136,0.2);}
+  .note-input{flex:1;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);color:var(--text-bright);padding:0.55rem 0.9rem;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:0.82rem;outline:none;}
+  .note-input:focus{border-color:var(--neon-blue);}
+  .reply-thread{display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1rem;}
+  .reply-empty{padding:0.85rem 1rem;border:1px dashed rgba(255,255,255,0.08);border-radius:10px;color:var(--text-dim);font-size:0.78rem;}
+  .reply-item{background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:0.9rem 1rem;}
+  .reply-meta{display:flex;justify-content:space-between;gap:1rem;align-items:center;margin-bottom:0.45rem;flex-wrap:wrap;}
+  .reply-author{font-size:0.8rem;font-weight:600;color:var(--text-bright);}
+  .reply-role{display:inline-flex;align-items:center;gap:0.35rem;padding:0.12rem 0.45rem;border-radius:999px;background:rgba(0,212,255,0.08);color:var(--neon-blue);font-size:0.6rem;font-family:'Share Tech Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;margin-left:0.45rem;}
+  .reply-role.role-technician{background:rgba(255,107,53,0.1);color:#ff6b35;}
+  .reply-role.role-admin{background:rgba(0,255,136,0.1);color:var(--neon-green);}
+  .reply-role.role-employee{background:rgba(0,212,255,0.08);color:var(--neon-blue);}
+  .reply-time{font-size:0.68rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .reply-message{font-size:0.82rem;line-height:1.65;color:var(--text-bright);}
+  .reply-composer{display:grid;gap:0.8rem;}
+  .reply-textarea{width:100%;min-height:110px;resize:vertical;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);color:var(--text-bright);padding:0.85rem 0.95rem;border-radius:10px;font-family:'Exo 2',sans-serif;font-size:0.82rem;outline:none;}
+  .reply-textarea:focus{border-color:var(--neon-blue);}
+  .detail-helper{font-size:0.72rem;color:var(--text-dim);line-height:1.6;}
+  .detail-actions{display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;}
+  .ghost-btn{padding:0.55rem 1rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:0.66rem;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;}
+  .ghost-btn:hover{color:var(--text-bright);border-color:rgba(255,255,255,0.16);}
+  .ai-help-box{background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.14);border-radius:12px;padding:1rem 1.1rem;}
+  .ai-help-grid{display:grid;gap:0.9rem;}
+  .ai-help-section{background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:0.85rem 0.95rem;}
+  .ai-help-label{font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;display:block;margin-bottom:0.45rem;}
+  .ai-help-copy{font-size:0.8rem;line-height:1.7;color:var(--text-bright);white-space:pre-line;}
+  .ai-help-meta{font-size:0.7rem;color:var(--text-dim);line-height:1.6;}
+  .loading-copy{color:var(--neon-blue);font-family:'Share Tech Mono',monospace;font-size:0.76rem;}
+
+  /* ══ RETRO TERMINAL ══ */
+  .terminal-section{flex-shrink:0;border-top:2px solid rgba(0,212,255,0.2);background:var(--bg-deep);position:relative;}
+  .term-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0.45rem 1rem;
+    background:rgba(20,30,10,0.9);
+    border-bottom:1px solid rgba(57,255,20,0.15);
+    cursor:pointer;
+  }
+  .term-header-left{display:flex;align-items:center;gap:0.7rem;}
+  .term-icon{font-size:0.9rem;}
+  .term-title{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--term-green);letter-spacing:0.12em;}
+  .term-blink{display:inline-block;width:7px;height:12px;background:var(--term-green);animation:cursor-blink 1s step-end infinite;margin-left:2px;vertical-align:middle;}
+  @keyframes cursor-blink{0%,100%{opacity:1}50%{opacity:0}}
+  .term-badges{display:flex;gap:0.5rem;align-items:center;}
+  .term-badge-dot{width:10px;height:10px;border-radius:50%;cursor:pointer;}
+  .term-badge-dot.red{background:#ff5f56;}
+  .term-badge-dot.yellow{background:#ffbd2e;}
+  .term-badge-dot.green{background:#27c93f;}
+  .term-expand{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--term-dim);}
+
+  .terminal-body{
+    background:var(--term-bg);
+    height:200px;overflow-y:auto;overflow-x:hidden;
+    padding:0.8rem 1rem;
+    font-family:'Share Tech Mono',monospace;
+    font-size:0.72rem;line-height:1.65;
+    scrollbar-width:thin;scrollbar-color:rgba(57,255,20,0.2) transparent;
+    position:relative;
+    transition:height 0.3s ease;
+  }
+  .terminal-body.collapsed{height:0;padding:0;}
+  .terminal-body::-webkit-scrollbar{width:3px;}
+  .terminal-body::-webkit-scrollbar-thumb{background:rgba(57,255,20,0.2);}
+
+  /* CRT effect */
+  .terminal-body::before{
+    content:'';position:absolute;inset:0;z-index:10;pointer-events:none;
+    background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,0.15) 1px,rgba(0,0,0,0.15) 2px);
+  }
+
+  .term-line{display:flex;gap:0.5rem;margin-bottom:0.1rem;}
+  .term-prompt{color:var(--term-green);}
+  .term-text{color:var(--term-green);}
+  .term-text.dim{color:var(--term-dim);}
+  .term-text.alert{color:#ff4040;text-shadow:0 0 8px rgba(255,64,64,0.6);}
+  .term-text.success{color:#27c93f;text-shadow:0 0 6px rgba(39,201,63,0.4);}
+  .term-text.info{color:var(--term-amber);}
+  .term-text.header{color:#ffffff;font-weight:bold;}
+  .term-separator{color:var(--term-dim);letter-spacing:0.05em;}
+
+  .term-input-line{display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;}
+  .term-cmd-input{
+    flex:1;background:transparent;border:none;outline:none;
+    font-family:'Share Tech Mono',monospace;font-size:0.72rem;color:var(--term-green);
+    caret-color:var(--term-green);
+  }
+  .powered-footer{
+    position:fixed;right:16px;bottom:12px;z-index:90;
+    font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;
+    color:rgba(232,244,255,0.5);font-family:'Share Tech Mono',monospace;
+    background:rgba(4,8,20,0.72);border:1px solid rgba(255,255,255,0.08);
+    padding:0.3rem 0.65rem;border-radius:999px;backdrop-filter:blur(10px);
+  }
+
+  .notice-alert{
+    position:absolute;top:-8px;right:8px;
+    background:var(--neon-red);color:#fff;
+    font-size:0.55rem;padding:0.1rem 0.4rem;border-radius:10px;
+    font-family:'Share Tech Mono',monospace;animation:blink 1.5s infinite;
+  }
+
+  /* ═══ COMMUNITY SUGGESTIONS (Technician) ═══ */
+  .community-section{
+    background:rgba(8,14,32,0.9);border:1px solid rgba(0,212,255,0.2);
+    border-radius:14px;padding:1.1rem 1.3rem;margin-top:0rem;
+    box-shadow:0 0 20px rgba(0,212,255,0.06);
+  }
+  .community-header{
+    display:flex;align-items:center;justify-content:space-between;gap:0.8rem;
+    margin-bottom:1rem;padding-bottom:0.7rem;border-bottom:1px solid rgba(0,212,255,0.12);
+  }
+  .community-title{
+    font-family:'Orbitron',sans-serif;font-size:0.72rem;font-weight:700;
+    letter-spacing:0.12em;color:var(--neon-blue);display:flex;align-items:center;gap:0.5rem;
+  }
+  .community-title .dot{width:6px;height:6px;border-radius:50%;background:var(--neon-blue);box-shadow:0 0 6px var(--neon-blue);}
+  .community-count{
+    font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);
+    background:rgba(0,212,255,0.08);padding:0.2rem 0.5rem;border-radius:10px;
+  }
+  .community-ai-summary{
+    background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.18);
+    border-radius:10px;padding:0.8rem 1rem;margin-bottom:1rem;
+    font-size:0.78rem;line-height:1.6;color:var(--text-bright);
+  }
+  .community-ai-summary .ai-label{
+    font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--neon-green);
+    letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;
+  }
+  .community-ai-btn{
+    padding:0.35rem 0.7rem;border-radius:6px;font-size:0.6rem;cursor:pointer;
+    background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);
+    color:var(--neon-green);font-family:'Share Tech Mono',monospace;transition:all 0.2s;
+  }
+  .community-ai-btn:hover{background:rgba(0,255,136,0.15);}
+  .comment-list{display:flex;flex-direction:column;gap:0.7rem;}
+  .comment-empty{color:var(--text-dim);font-size:0.76rem;text-align:center;padding:1.5rem 1rem;border:1px dashed rgba(255,255,255,0.08);border-radius:10px;}
+  .comment-card{
+    background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;padding:0.85rem 1rem;transition:all 0.2s;
+  }
+  .comment-card:hover{border-color:rgba(0,212,255,0.15);}
+  .comment-card.verified{
+    border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.04);
+    box-shadow:0 0 12px rgba(0,255,136,0.08);
+  }
+  .comment-card.pinned{border-color:rgba(255,170,0,0.3);background:rgba(255,170,0,0.04);}
+  .comment-card.reply-card{margin-left:1.8rem;border-left:2px solid rgba(0,212,255,0.15);}
+  .comment-meta{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;margin-bottom:0.4rem;flex-wrap:wrap;}
+  .comment-author{font-size:0.78rem;font-weight:600;color:var(--text-bright);}
+  .comment-badges{display:flex;gap:0.35rem;align-items:center;}
+  .badge-verified{
+    display:inline-flex;align-items:center;gap:0.25rem;padding:0.12rem 0.5rem;
+    border-radius:20px;background:rgba(0,255,136,0.12);color:var(--neon-green);
+    font-size:0.55rem;font-family:'Share Tech Mono',monospace;letter-spacing:0.08em;
+  }
+  .badge-pinned{
+    display:inline-flex;align-items:center;gap:0.2rem;padding:0.12rem 0.45rem;
+    border-radius:20px;background:rgba(255,170,0,0.1);color:#ffaa00;
+    font-size:0.55rem;font-family:'Share Tech Mono',monospace;
+  }
+  .comment-time{font-size:0.6rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+  .comment-text{font-size:0.8rem;line-height:1.65;color:var(--text-bright);margin-bottom:0.5rem;}
+  .comment-actions{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+  .vote-btn{
+    display:inline-flex;align-items:center;gap:0.3rem;padding:0.22rem 0.5rem;
+    border-radius:8px;font-size:0.62rem;cursor:pointer;
+    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+    color:var(--text-dim);font-family:'Share Tech Mono',monospace;transition:all 0.2s;
+  }
+  .vote-btn:hover{background:rgba(0,212,255,0.1);color:var(--neon-blue);border-color:rgba(0,212,255,0.25);}
+  .tech-action-btn{
+    display:inline-flex;align-items:center;gap:0.2rem;padding:0.22rem 0.5rem;
+    border-radius:6px;font-size:0.58rem;cursor:pointer;
+    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+    color:var(--text-dim);font-family:'Share Tech Mono',monospace;transition:all 0.2s;
+  }
+  .tech-action-btn:hover{color:var(--text-bright);border-color:rgba(255,255,255,0.18);}
+  .tech-action-btn.verify:hover{color:var(--neon-green);border-color:rgba(0,255,136,0.3);}
+  .tech-action-btn.pin:hover{color:#ffaa00;border-color:rgba(255,170,0,0.3);}
+  .tech-action-btn.delete:hover{color:var(--neon-red);border-color:rgba(255,68,102,0.3);}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="brand">D Desk AI</div>
+    <div class="tech-badge">TECHNICIAN</div>
+  </div>
+  <div class="tb-right">
+    <div class="tech-name"><div class="dot-tech"></div><span id="tech-user">TECH01</span></div>
+    <button class="tb-btn" onclick="window.location='index.html'">LOGOUT</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- LEFT — Ticket Queue -->
+  <div class="left-panel">
+    <!-- Summary -->
+    <div class="summary-row">
+      <div class="sum-box"><div class="sum-val" style="color:var(--neon-blue)" id="s-assigned">0</div><div class="sum-label">Assigned</div></div>
+      <div class="sum-box"><div class="sum-val" style="color:var(--neon-amber)" id="s-open">0</div><div class="sum-label">Open</div></div>
+      <div class="sum-box"><div class="sum-val" style="color:var(--neon-green)" id="s-done">0</div><div class="sum-label">Done Today</div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <span class="filter-chip active" onclick="filterTickets('all',this)">All</span>
+      <span class="filter-chip" onclick="filterTickets('open',this)">Open</span>
+      <span class="filter-chip" onclick="filterTickets('progress',this)">In Progress</span>
+      <span class="filter-chip" onclick="filterTickets('high',this)">High Priority</span>
+      <span class="filter-chip" onclick="filterTickets('resolved',this)">Resolved</span>
+    </div>
+
+    <!-- Tickets -->
+    <div class="ticket-list" id="ticket-list"></div>
+  </div>
+
+  <!-- RIGHT — Detail + Terminal -->
+  <div class="right-panel">
+    <div class="detail-area" id="detail-area">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:1rem;opacity:0.4;">
+        <div style="font-size:3rem;">🎫</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.8rem;color:var(--text-dim);letter-spacing:0.1em;">SELECT A TICKET TO VIEW DETAILS</div>
+      </div>
+    </div>
+
+    <!-- RETRO TERMINAL -->
+    <div class="terminal-section">
+      <div style="position:relative;">
+        <span class="notice-alert" id="notice-badge">LIVE</span>
+      </div>
+      <div class="term-header" onclick="toggleTerminal()">
+        <div class="term-header-left">
+          <span class="term-icon">🖥️</span>
+          <span class="term-title">ADMIN NOTICES TERMINAL<span class="term-blink"></span></span>
+        </div>
+        <div class="term-badges">
+          <div class="term-badge-dot red"></div>
+          <div class="term-badge-dot yellow"></div>
+          <div class="term-badge-dot green"></div>
+          <span class="term-expand" id="term-expand-label">▲ COLLAPSE</span>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <!-- Lines injected by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+<!-- SIMILAR TICKETS MODAL -->
+<div class="modal-overlay" id="similar-tickets-modal" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center; background:rgba(4,6,18,0.85); backdrop-filter:blur(14px); padding:1rem;" onclick="if(event.target===this)closeSimilarTicketsModal()">
+  <div class="modal-box" style="width:min(800px, calc(100vw - 2rem)); max-height:calc(100vh - 3rem); background:rgba(8,16,38,0.97); border:1px solid var(--border-glow); border-radius:20px; display:flex; flex-direction:column; overflow:hidden;">
+    <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.5rem; border-bottom:1px solid var(--border-glow);">
+      <div class="modal-title" style="font-family:'Orbitron',sans-serif; color:var(--neon-blue); font-weight:700; font-size:0.85rem; letter-spacing:0.12em;">SIMILAR RESOLVED TICKETS</div>
+      <button class="modal-close" onclick="closeSimilarTicketsModal()" style="background:rgba(255,68,102,0.08); border:1px solid rgba(255,68,102,0.25); color:var(--neon-red); border-radius:8px; width:32px; height:32px; cursor:pointer;">&times;</button>
+    </div>
+    <div class="modal-body" id="similar-tickets-body" style="padding:1.2rem 1.5rem; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:1rem;">
+      <div style="text-align:center; color:var(--text-dim); font-size:0.8rem;">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="powered-footer">Powered by Daivik Software Solutions</div>
+
+
+<script>
+const currentRole = sessionStorage.getItem('nd_role');
+if(currentRole !== 'tech') {
+  window.location = 'index.html';
+}
+
+const techUser = sessionStorage.getItem('nd_user') || 'tech01';
+const techDisplayName = sessionStorage.getItem('nd_name') || techUser.toUpperCase();
+const techSpecialization = sessionStorage.getItem('nd_specialization') || 'general';
+document.getElementById('tech-user').textContent = techDisplayName.toUpperCase();
+document.querySelector('.tech-badge').textContent = `TECHNICIAN · ${techSpecialization.replace(/_/g, ' ').toUpperCase()}`;
+
+let tickets = [];
+let notices = [];
+let selectedTicket = null;
+let filterMode = 'all';
+let termCollapsed = false;
+let aiHelpByTicket = {};
+
+const terminalBody = document.getElementById('terminal-body');
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function nl2br(value) {
+  return escapeHtml(value).replace(/\n/g, '<br>');
+}
+
+function normalizeStatus(status) {
+  return status === 'in_progress' ? 'progress' : (status || 'open');
+}
+
+function statusLabel(status) {
+  const normalized = normalizeStatus(status);
+  if(normalized === 'progress') return 'IN PROGRESS';
+  return normalized.toUpperCase();
+}
+
+function formatDate(value) {
+  if(!value) return 'N/A';
+  let raw = String(value);
+  // Server stores UTC without 'Z'; append it so the browser converts to local PC time
+  if(!raw.endsWith('Z') && !raw.includes('+') && !raw.includes('-', 10)) raw += 'Z';
+  const date = new Date(raw);
+  if(Number.isNaN(date.getTime())) return escapeHtml(value);
+  return date.toLocaleString();
+}
+
+function roleLabel(role) {
+  const normalized = (role || '').toLowerCase();
+  if(normalized === 'tech' || normalized === 'technician') return 'Technician';
+  if(normalized === 'admin') return 'Admin';
+  if(normalized === 'employee') return 'Employee';
+  return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : 'Unknown';
+}
+
+function roleClass(role) {
+  const normalized = (role || '').toLowerCase();
+  if(normalized === 'tech' || normalized === 'technician') return 'role-technician';
+  if(normalized === 'admin') return 'role-admin';
+  return 'role-employee';
+}
+
+async function apiJson(url, options={}) {
+  const response = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { detail: text || 'Unexpected response from server.' };
+  }
+  if(!response.ok) {
+    throw new Error(data.detail || `Request failed (${response.status})`);
+  }
+  return data;
+}
+
+function filterTickets(mode, el) {
+  filterMode = mode;
+  document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function filteredTickets() {
+  let filtered = [...tickets];
+  if(filterMode === 'open') filtered = filtered.filter(ticket => normalizeStatus(ticket.status) === 'open');
+  else if(filterMode === 'progress') filtered = filtered.filter(ticket => normalizeStatus(ticket.status) === 'progress');
+  else if(filterMode === 'resolved') filtered = filtered.filter(ticket => normalizeStatus(ticket.status) === 'resolved');
+  else if(filterMode === 'high') filtered = filtered.filter(ticket => ticket.priority === 'High');
+
+  return filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+}
+
+function renderList() {
+  const list = document.getElementById('ticket-list');
+  const filtered = filteredTickets();
+
+  if(!filtered.length) {
+    list.innerHTML = `<div style="padding:1rem;color:var(--text-dim);font-size:0.75rem;">No tickets match the current filter.</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(ticket => {
+    const status = normalizeStatus(ticket.status);
+    const employee = ticket.employee_name || ticket.employee_id || 'Unknown';
+    const location = ticket.location ? ` · ${ticket.location}` : '';
+    return `
+      <div class="tk-item ${ticket.priority === 'High' ? 'high-priority' : ''} ${selectedTicket === ticket.ticket_id ? 'active-ticket' : ''}" onclick="openTicket('${escapeHtml(ticket.ticket_id)}')">
+        <div class="tk-header">
+          <span class="tk-id">#${escapeHtml(ticket.ticket_id)}</span>
+          <span class="tk-time">${escapeHtml(formatDate(ticket.created_at))}</span>
+        </div>
+        <div class="tk-desc">${escapeHtml(ticket.description)}</div>
+        <div class="tk-footer">
+          <span class="pill pill-cat-${escapeHtml((ticket.category || 'Other').toLowerCase())}">${escapeHtml(ticket.category || 'Other')}</span>
+          <span class="pill pill-${escapeHtml(ticket.priority.toLowerCase())}">${escapeHtml(ticket.priority)}</span>
+          <span class="pill pill-${status}">${statusLabel(ticket.status)}</span>
+          <span class="emp-name">${escapeHtml(employee + location)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function showEmptyDetail() {
+  document.getElementById('detail-area').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:1rem;opacity:0.4;">
+      <div style="font-size:3rem;">🎫</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.8rem;color:var(--text-dim);letter-spacing:0.1em;">SELECT A TICKET TO VIEW DETAILS</div>
+    </div>
+  `;
+}
+
+function repliesMarkup(ticket) {
+  const replies = (Array.isArray(ticket.replies) ? ticket.replies : [])
+    .filter(reply => ['employee', 'tech', 'technician'].includes(String(reply.author_role || '').toLowerCase()));
+  if(!replies.length) {
+    return `<div class="reply-empty">No replies have been added yet. Use the composer below to update the employee and keep the ticket history in one place.</div>`;
+  }
+
+  return `<div class="reply-thread">${
+    replies.map(reply => `
+      <div class="reply-item">
+        <div class="reply-meta">
+          <div class="reply-author">
+            ${escapeHtml(reply.author_name || reply.author_username || 'Unknown')}
+            <span class="reply-role ${roleClass(reply.author_role)}">${escapeHtml(roleLabel(reply.author_role))}</span>
+          </div>
+          <div class="reply-time">${escapeHtml(formatDate(reply.created_at))}</div>
+        </div>
+        <div class="reply-message">${nl2br(reply.message || '')}</div>
+      </div>
+    `).join('')
+  }</div>`;
+}
+
+function aiHelpMarkup(ticket) {
+  const result = aiHelpByTicket[ticket.ticket_id];
+  if(result?.loading) {
+    return `<div class="ai-help-box"><div class="loading-copy">Generating technician guidance for #${escapeHtml(ticket.ticket_id)}...</div></div>`;
+  }
+
+  if(!result) {
+    return `
+      <div class="ai-help-box">
+        <div class="detail-helper">Generate AI troubleshooting guidance from the live ticket details. You can include extra clues from the user before asking for help.</div>
+        <div class="ai-help-grid" style="margin-top:0.9rem;">
+          <div>
+            <label class="ai-help-label">Extra Context For AI</label>
+            <textarea class="reply-textarea" id="ai-context-${escapeHtml(ticket.ticket_id)}" placeholder="Example: user already restarted twice, office Wi-Fi works for nearby users, issue started after VPN update."></textarea>
+          </div>
+          <div class="detail-actions">
+            <button class="update-btn" onclick="generateAiHelp('${escapeHtml(ticket.ticket_id)}')">GENERATE AI HELP</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="ai-help-box">
+      <div class="ai-help-grid">
+        <div>
+          <label class="ai-help-label">Extra Context For AI</label>
+          <textarea class="reply-textarea" id="ai-context-${escapeHtml(ticket.ticket_id)}" placeholder="Add more ticket clues before regenerating.">${escapeHtml(result.extra_context || '')}</textarea>
+        </div>
+        <div class="ai-help-section">
+          <span class="ai-help-label">Analysis</span>
+          <div class="ai-help-copy">${escapeHtml(result.analysis || 'No analysis generated.')}</div>
+        </div>
+        <div class="ai-help-section">
+          <span class="ai-help-label">Next Steps</span>
+          <div class="ai-help-copy">${escapeHtml(result.next_steps || result.recommended_steps || 'No next steps generated.')}</div>
+        </div>
+        <div class="ai-help-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
+            <span class="ai-help-label" style="margin-bottom:0">Suggested Reply</span>
+            ${(result.reply_draft || result.suggested_reply) ? `<button class="update-btn" style="padding:0.25rem 0.6rem; font-size:0.62rem;" onclick="copyDraftToReply('${escapeHtml(ticket.ticket_id)}')">📋 USE THIS REPLY</button>` : ''}
+          </div>
+          <div class="ai-help-copy">${escapeHtml(result.reply_draft || result.suggested_reply || 'No reply draft generated.')}</div>
+        </div>
+        <div class="ai-help-meta">
+          Source: <strong style="color:var(--neon-blue)">${escapeHtml(result.provider_label || (result.source === 'fallback' ? 'Local fallback' : 'AI assistance'))}</strong>
+          ${result.fallback_reason ? `<br>Fallback note: ${escapeHtml(result.fallback_reason)}` : ''}
+        </div>
+        <div class="detail-actions">
+          <button class="update-btn" onclick="generateAiHelp('${escapeHtml(ticket.ticket_id)}')">REGENERATE AI HELP</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function copyDraftToReply(ticketId) {
+  const result = aiHelpByTicket[ticketId];
+  if(!result) return;
+  const draft = result.reply_draft || result.suggested_reply || '';
+  const replyInput = document.getElementById(`reply-input-${ticketId}`);
+  if(replyInput) {
+    replyInput.value = draft;
+    replyInput.focus();
+    termPrint(`[AI] Draft reply copied to response box for #${ticketId}`, 'info');
+  }
+}
+
+function openTicket(ticketId) {
+  const ticket = tickets.find(item => item.ticket_id === ticketId);
+  if(!ticket) {
+    showEmptyDetail();
+    return;
+  }
+
+  selectedTicket = ticketId;
+  renderList();
+
+  const normalizedStatus = normalizeStatus(ticket.status);
+  const priorityColor = { High: 'var(--neon-red)', Medium: 'var(--neon-amber)', Low: 'var(--neon-green)' }[ticket.priority];
+  const statusColor = { open: 'var(--neon-blue)', progress: 'var(--neon-amber)', resolved: 'var(--neon-green)', closed: 'var(--text-dim)' }[normalizedStatus];
+  const raisedBy = ticket.employee_name || ticket.employee_id || 'Unknown employee';
+
+  document.getElementById('detail-area').innerHTML = `
+    <div class="detail-card">
+      <div class="detail-title" style="justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:0.5rem;"><div class="dot"></div>Ticket Details — #${escapeHtml(ticket.ticket_id)}</div>
+        <button class="update-btn" onclick="fetchSimilarTickets('${escapeHtml(ticket.ticket_id)}')">FIND SIMILAR TICKETS</button>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Ticket ID</label><p style="color:var(--neon-blue);font-family:'Share Tech Mono',monospace">#${escapeHtml(ticket.ticket_id)}</p></div>
+        <div class="detail-field"><label>Category</label><p><span class="pill pill-cat-${escapeHtml((ticket.category || 'Other').toLowerCase())}">${escapeHtml(ticket.category || 'Other')}</span></p></div>
+        <div class="detail-field"><label>Priority</label><p style="color:${priorityColor};font-weight:600">${escapeHtml(ticket.priority)}</p></div>
+        <div class="detail-field"><label>Status</label><p style="color:${statusColor};font-weight:600">${statusLabel(ticket.status)}</p></div>
+        <div class="detail-field"><label>Raised By</label><p>${escapeHtml(raisedBy)}</p></div>
+        <div class="detail-field"><label>Created</label><p style="color:var(--text-dim)">${escapeHtml(formatDate(ticket.created_at))}</p></div>
+        <div class="detail-field"><label>Location</label><p>${escapeHtml(ticket.location || 'Not provided')}</p></div>
+        <div class="detail-field"><label>Assigned To</label><p>${escapeHtml(ticket.assigned_to || 'Unassigned')}</p></div>
+        <div class="detail-field"><label>AI Issue</label><p>${ticket.predicted_issue ? escapeHtml(ticket.predicted_issue.replace(/_/g, ' ')) : 'None'}</p></div>
+        <div class="detail-field"><label>Specialization</label><p>${escapeHtml((ticket.technician_specialization || 'general').replace(/_/g, ' '))}</p></div>
+        <div class="detail-field"><label>AI Confidence</label><p>${ticket.prediction_confidence !== null && ticket.prediction_confidence !== undefined ? `${escapeHtml(Math.round(ticket.prediction_confidence * 100))}%` : 'N/A'}</p></div>
+        <div class="detail-field"><label>Duplicate Of</label><p>${escapeHtml(ticket.duplicate_of || 'None')}</p></div>
+        ${ticket.uploaded_image_url ? `<div class="detail-field"><label>Uploaded Image</label><p><a href="${escapeHtml(ticket.uploaded_image_url)}" target="_blank" style="color:var(--neon-blue);">View image</a></p></div>` : ''}
+        <div class="detail-field detail-desc">
+          <label>Issue Description</label>
+          <div class="detail-desc-text">${escapeHtml(ticket.description)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-suggestion">
+      <div class="ai-sug-title">LIVE AUTO-FIX / AI CONTEXT</div>
+      <div class="ai-sug-text">${ticket.auto_fix ? nl2br(ticket.auto_fix) : 'No AI suggestion was stored for this ticket.'}</div>
+    </div>
+
+    <div class="detail-card">
+      <div class="detail-title"><div class="dot" style="background:var(--neon-blue);box-shadow:0 0 6px var(--neon-blue)"></div>AI Help</div>
+      ${aiHelpMarkup(ticket)}
+    </div>
+
+    <div class="detail-card">
+      <div class="detail-title"><div class="dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35"></div>Ticket Conversation</div>
+      ${repliesMarkup(ticket)}
+      <div class="reply-composer">
+        <label class="ai-help-label">Add Technician Reply</label>
+        <textarea class="reply-textarea" id="reply-input-${escapeHtml(ticket.ticket_id)}" placeholder="Share a troubleshooting update, ask for a screenshot, or confirm the fix with the employee."></textarea>
+        <div class="detail-actions">
+          <button class="update-btn" onclick="sendReply('${escapeHtml(ticket.ticket_id)}')">SEND REPLY</button>
+          <span class="detail-helper">Replies are saved on the ticket and technician replies will move new tickets into progress automatically.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <div class="community-header">
+        <div class="community-title"><div class="dot"></div>COMMUNITY SUGGESTIONS</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <span class="community-count" id="comm-count-${escapeHtml(ticket.ticket_id)}">Loading...</span>
+          <button class="community-ai-btn" onclick="loadAISummary('${escapeHtml(ticket.ticket_id)}')">🤖 AI Summary</button>
+        </div>
+      </div>
+      <div id="comm-ai-summary-${escapeHtml(ticket.ticket_id)}"></div>
+      <div class="comment-list" id="comm-list-${escapeHtml(ticket.ticket_id)}">
+        <div class="comment-empty">Loading community suggestions...</div>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <div class="detail-title"><div class="dot" style="background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)"></div>Update Ticket</div>
+      <div style="margin-bottom:0.8rem;">
+        <label style="font-size:0.6rem;letter-spacing:0.12em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;display:block;margin-bottom:0.4rem;">Resolution Note / Update</label>
+        <input class="note-input" id="note-input-${escapeHtml(ticket.ticket_id)}" value="${escapeHtml(ticket.resolution || '')}" placeholder="Add a resolution note or update..." style="width:100%;"/>
+      </div>
+      <div class="status-form">
+        <select class="status-select" id="status-select-${escapeHtml(ticket.ticket_id)}">
+          <option value="open" ${normalizedStatus === 'open' ? 'selected' : ''}>Open</option>
+          <option value="in_progress" ${normalizedStatus === 'progress' ? 'selected' : ''}>In Progress</option>
+          <option value="resolved" ${normalizedStatus === 'resolved' ? 'selected' : ''}>Resolved</option>
+          <option value="closed" ${normalizedStatus === 'closed' ? 'selected' : ''}>Closed</option>
+        </select>
+        <button class="update-btn" onclick="updateStatus('${escapeHtml(ticket.ticket_id)}')">UPDATE STATUS</button>
+        <button class="resolve-btn" onclick="resolveTicket('${escapeHtml(ticket.ticket_id)}')">MARK RESOLVED</button>
+      </div>
+    </div>
+  `;
+  loadTechComments(ticket.ticket_id);
+}
+
+async function sendReply(ticketId, messageOverride=null) {
+  const input = document.getElementById(`reply-input-${ticketId}`);
+  const message = (messageOverride ?? input?.value ?? '').trim();
+
+  if(!message) {
+    termPrint('[ERR] Reply message is required before sending.', 'alert');
+    return;
+  }
+
+  try {
+    await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/replies`, {
+      method: 'POST',
+      body: JSON.stringify({
+        author_username: techUser,
+        author_name: techDisplayName,
+        author_role: 'tech',
+        message,
+      }),
+    });
+    if(input && messageOverride === null) input.value = '';
+    termPrint(`[SYS] Reply added to ticket #${ticketId}`, 'success');
+    await refreshTickets(ticketId);
+  } catch (error) {
+    termPrint(`[ERR] ${error.message}`, 'alert');
+  }
+}
+
+async function generateAiHelp(ticketId) {
+  const context = document.getElementById(`ai-context-${ticketId}`)?.value.trim() || '';
+  aiHelpByTicket[ticketId] = { loading: true, extra_context: context };
+  openTicket(ticketId);
+
+  try {
+    const result = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/ai-help`, {
+      method: 'POST',
+      body: JSON.stringify({
+        requester_username: techUser,
+        requester_name: techDisplayName,
+        requester_role: 'tech',
+        extra_context: context,
+      }),
+    });
+    aiHelpByTicket[ticketId] = {
+      ...result,
+      extra_context: context,
+    };
+    termPrint(`[AI] Guidance generated for ticket #${ticketId}`, 'info');
+  } catch (error) {
+    aiHelpByTicket[ticketId] = {
+      analysis: 'AI help could not be generated right now.',
+      next_steps: '1. Review the original ticket details.\n2. Confirm the most recent user symptoms.\n3. Retry the AI help request after checking connectivity.',
+      reply_draft: `Hi, I am still investigating ticket ${ticketId}. Please share any new error details or screenshots so I can continue.`,
+      source: 'fallback',
+      provider_label: 'Local fallback',
+      fallback_reason: error.message,
+      extra_context: context,
+    };
+    termPrint(`[ERR] ${error.message}`, 'alert');
+  }
+
+  openTicket(ticketId);
+}
+
+async function updateStatus(ticketId) {
+  const status = document.getElementById(`status-select-${ticketId}`).value;
+  const resolution = document.getElementById(`note-input-${ticketId}`).value.trim();
+
+  try {
+    await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status,
+        assigned_to: techDisplayName,
+        resolution: resolution || null,
+      }),
+    });
+    termPrint(`[SYS] Ticket #${ticketId} updated -> ${status.toUpperCase()}`, 'info');
+    await refreshTickets(ticketId);
+  } catch (error) {
+    termPrint(`[ERR] ${error.message}`, 'alert');
+  }
+}
+
+async function resolveTicket(ticketId) {
+  const resolution = document.getElementById(`note-input-${ticketId}`).value.trim();
+
+  try {
+    await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status: 'resolved',
+        assigned_to: techDisplayName,
+        resolution: resolution || 'Resolved by technician.',
+      }),
+    });
+    termPrint(`[SYS] Ticket #${ticketId} resolved by ${techDisplayName.toUpperCase()}`, 'success');
+    await refreshTickets(ticketId);
+  } catch (error) {
+    termPrint(`[ERR] ${error.message}`, 'alert');
+  }
+}
+
+function updateSummary() {
+  const assignedToMe = tickets.filter(ticket => (ticket.assigned_to || '').toLowerCase() === techDisplayName.toLowerCase()).length;
+  const activeQueue = tickets.filter(ticket => ['open', 'progress'].includes(normalizeStatus(ticket.status))).length;
+  const today = new Date().toDateString();
+  const resolvedToday = tickets.filter(ticket => normalizeStatus(ticket.status) === 'resolved' && ticket.resolved_at && new Date(ticket.resolved_at).toDateString() === today).length;
+
+  document.getElementById('s-assigned').textContent = assignedToMe || activeQueue;
+  document.getElementById('s-open').textContent = activeQueue;
+  document.getElementById('s-done').textContent = resolvedToday;
+}
+
+function toggleTerminal() {
+  termCollapsed = !termCollapsed;
+  terminalBody.classList.toggle('collapsed', termCollapsed);
+  document.getElementById('term-expand-label').textContent = termCollapsed ? '▼ EXPAND' : '▲ COLLAPSE';
+  document.getElementById('notice-badge').style.display = termCollapsed && notices.length ? 'inline-block' : 'none';
+}
+
+function terminalLines() {
+  const lines = [
+    { type: 'separator', text: '===============================================================' },
+    { type: 'header', text: '  D DESK AI - LIVE NOTICE TERMINAL [POWERGRID IT SERVICES]' },
+    { type: 'separator', text: '===============================================================' },
+    { type: 'dim', text: `Session: ${techDisplayName.toUpperCase()} | Queue size: ${tickets.length}` },
+    { type: 'dim', text: '' },
+  ];
+
+  if(!notices.length) {
+    lines.push({ type: 'info', text: 'No live circulars are available right now.' });
+  } else {
+    notices.forEach(circular => {
+      lines.push({ type: 'header', text: `[ADMIN NOTICE] ${formatDate(circular.created_at)}` });
+      lines.push({ type: 'separator', text: '---------------------------------------------------------------' });
+      lines.push({ type: circular.priority === 'urgent' ? 'alert' : circular.priority === 'info' ? 'info' : 'success', text: `${circular.priority.toUpperCase()}: ${circular.subject}` });
+      lines.push({ type: 'text', text: circular.body });
+      lines.push({ type: 'dim', text: `Target: ${circular.target}` });
+      if(circular.expires_at) {
+        lines.push({ type: 'dim', text: `Auto delete: ${formatDate(circular.expires_at)}` });
+      }
+      lines.push({ type: 'dim', text: '' });
+    });
+  }
+
+  lines.push({ type: 'dim', text: '[TERMINAL] Type "help" for available commands.' });
+  return lines;
+}
+
+function renderTerminal() {
+  const typeMap = { separator: 'term-separator', header: 'header', alert: 'alert', success: 'success', info: 'info', dim: 'dim', text: '' };
+  terminalBody.innerHTML = terminalLines().map(line => `
+    <div class="term-line"><span class="term-text ${typeMap[line.type] || ''}">${escapeHtml(line.text)}</span></div>
+  `).join('');
+
+  const inputLine = document.createElement('div');
+  inputLine.className = 'term-input-line';
+  inputLine.innerHTML = `<span class="term-prompt">ddesk@tech-${escapeHtml(techUser)}:~$</span> <input class="term-cmd-input" id="term-input" placeholder="type command..." autocomplete="off"/>`;
+  terminalBody.appendChild(inputLine);
+  document.getElementById('term-input').addEventListener('keydown', termCommand);
+
+  const badge = document.getElementById('notice-badge');
+  badge.textContent = notices.length ? `${notices.length} NEW` : 'LIVE';
+  badge.style.display = termCollapsed ? 'inline-block' : 'none';
+}
+
+function termPrint(text, type='text') {
+  const typeMap = { text: '', alert: 'alert', success: 'success', info: 'info', dim: 'dim' };
+  const div = document.createElement('div');
+  div.className = 'term-line';
+  div.innerHTML = `<span class="term-text ${typeMap[type] || ''}">${escapeHtml(text)}</span>`;
+  const inputLine = terminalBody.querySelector('.term-input-line');
+  if(inputLine) terminalBody.insertBefore(div, inputLine);
+  else terminalBody.appendChild(div);
+  terminalBody.scrollTop = terminalBody.scrollHeight;
+}
+
+function commandOutput(command) {
+  if(command === 'help') return ['Available: status, list, whoami, clear, notices, ping'];
+  if(command === 'status') return [`System: ONLINE | Tickets: ${tickets.length} | Active: ${tickets.filter(ticket => ['open', 'progress'].includes(normalizeStatus(ticket.status))).length}`];
+  if(command === 'list') {
+    if(!tickets.length) return ['No tickets in the live queue.'];
+    return tickets.slice(0, 8).map(ticket => `#${ticket.ticket_id} [${statusLabel(ticket.status)}] ${ticket.priority} - ${ticket.description.slice(0, 48)}`);
+  }
+  if(command === 'whoami') return [`Technician: ${techDisplayName.toUpperCase()} | Session: ACTIVE`];
+  if(command === 'notices') {
+    if(!notices.length) return ['No notices currently loaded.'];
+    return notices.map(circular => `${circular.priority.toUpperCase()} - ${circular.subject}`);
+  }
+  if(command === 'ping') return ['PING ddesk-ai.local: 4ms - Connection stable.'];
+  if(command === 'clear') return '__clear__';
+  return null;
+}
+
+function termCommand(event) {
+  if(event.key !== 'Enter') return;
+  const input = document.getElementById('term-input');
+  const command = input.value.trim().toLowerCase();
+  input.value = '';
+  termPrint(`neuro@tech-${techUser}:~$ ${command}`, 'dim');
+  if(!command) return;
+
+  const output = commandOutput(command);
+  if(output === '__clear__') {
+    renderTerminal();
+    termPrint('Terminal cleared.', 'dim');
+    return;
+  }
+  if(output) {
+    output.forEach(line => termPrint(line, 'text'));
+    return;
+  }
+  termPrint(`Command not found: ${command}. Type "help" for options.`, 'alert');
+}
+
+async function fetchSimilarTickets(ticketId) {
+  const modal = document.getElementById('similar-tickets-modal');
+  const body = document.getElementById('similar-tickets-body');
+  modal.style.display = 'flex';
+  body.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:0.8rem; padding: 2rem;">Searching for similar resolved tickets...</div>';
+
+  try {
+    const res = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/similar`);
+    if (!res.matches || res.matches.length === 0) {
+      body.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:0.8rem; padding: 2rem;">No similar resolved tickets found.</div>';
+      return;
+    }
+
+    body.innerHTML = res.matches.map(m => `
+      <div style="background:rgba(10,18,42,0.75); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:1rem 1.2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+          <span style="font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--neon-blue);">#${escapeHtml(m.ticket_id)}</span>
+          <div style="display:flex; gap:0.5rem;">
+            <span class="pill pill-resolved" style="font-size:0.6rem;">${escapeHtml(m.similarity)}% Match</span>
+          </div>
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-bright); line-height:1.5; margin-bottom:0.6rem;"><strong>Issue:</strong> ${escapeHtml(m.description)}</div>
+        <div style="font-size:0.8rem; color:var(--neon-green); line-height:1.5;"><strong>Resolution:</strong> ${nl2br(m.resolution)}</div>
+        <div style="font-size:0.65rem; color:var(--text-dim); font-family:'Share Tech Mono',monospace; margin-top:0.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:0.5rem;">
+          Resolved at: ${escapeHtml(formatDate(m.resolved_at))} | Tech: ${escapeHtml(m.assigned_to || 'Unknown')}
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    body.innerHTML = `<div style="text-align:center; color:var(--neon-red); font-size:0.8rem; padding: 2rem;">Error: ${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function closeSimilarTicketsModal() {
+  document.getElementById('similar-tickets-modal').style.display = 'none';
+}
+
+
+async function loadNotices() {
+  try {
+    notices = await apiJson('/api/circulars');
+  } catch {
+    notices = [];
+  }
+  renderTerminal();
+}
+
+async function refreshTickets(ticketToOpen=null) {
+  try {
+    tickets = await apiJson(`/api/tickets?limit=200&include_replies=true&assigned_to=${encodeURIComponent(techDisplayName)}`);
+    renderList();
+    updateSummary();
+    if(ticketToOpen) {
+      openTicket(ticketToOpen);
+    } else if(selectedTicket && tickets.some(ticket => ticket.ticket_id === selectedTicket)) {
+      openTicket(selectedTicket);
+    } else if(tickets.length) {
+      openTicket(tickets[0].ticket_id);
+    } else {
+      showEmptyDetail();
+    }
+  } catch (error) {
+    showEmptyDetail();
+    termPrint(`[ERR] ${error.message}`, 'alert');
+  }
+}
+
+window.addEventListener('load', async () => {
+  await refreshTickets();
+  await loadNotices();
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+//  COMMUNITY DISCUSSION — TECHNICIAN VIEW
+// ═══════════════════════════════════════════════════════════════════════
+
+async function loadTechComments(ticketId) {
+  try {
+    const data = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/comments`);
+    const comments = data.comments || [];
+    
+    const countEl = document.getElementById(`comm-count-${ticketId}`);
+    if(countEl) countEl.textContent = `${comments.length} comment${comments.length !== 1 ? 's' : ''}`;
+    
+    const listEl = document.getElementById(`comm-list-${ticketId}`);
+    if(!listEl) return;
+    
+    if(!comments.length) {
+      listEl.innerHTML = `<div class="comment-empty">No community suggestions yet.</div>`;
+      return;
+    }
+    
+    const topLevel = comments.filter(c => !c.parent_comment_id);
+    const replies = comments.filter(c => c.parent_comment_id);
+    
+    listEl.innerHTML = topLevel.map(c => {
+      const childReplies = replies.filter(r => r.parent_comment_id === c.id);
+      return renderTechComment(c, ticketId) + childReplies.map(r => renderTechComment(r, ticketId, true)).join('');
+    }).join('');
+    
+  } catch(err) {
+    const listEl = document.getElementById(`comm-list-${ticketId}`);
+    if(listEl) listEl.innerHTML = `<div class="comment-empty">Could not load comments.</div>`;
+  }
+}
+
+function renderTechComment(c, ticketId, isReply = false) {
+  const verifiedBadge = c.is_verified ? `<span class="badge-verified">✓ VERIFIED SOLUTION</span>` : '';
+  const pinnedBadge = c.is_pinned ? `<span class="badge-pinned">📌 PINNED</span>` : '';
+  const cardClass = `comment-card${c.is_verified ? ' verified' : ''}${c.is_pinned ? ' pinned' : ''}${isReply ? ' reply-card' : ''}`;
+  const verifyLabel = c.is_verified ? 'Unverify' : '✓ Verify';
+  const pinLabel = c.is_pinned ? 'Unpin' : '📌 Pin';
+  
+  return `
+    <div class="${cardClass}" id="comment-${c.id}">
+      <div class="comment-meta">
+        <div>
+          <span class="comment-author">${escapeHtml(c.employee_name || c.employee_id)}</span>
+          <span class="comment-time" style="margin-left:0.5rem;">${escapeHtml(formatDate(c.created_at))}</span>
+        </div>
+        <div class="comment-badges">${verifiedBadge}${pinnedBadge}</div>
+      </div>
+      <div class="comment-text">${nl2br(c.comment)}</div>
+      <div class="comment-actions">
+        <button class="vote-btn" onclick="techVoteComment(${c.id}, '${escapeHtml(ticketId)}')">▲ Helpful (${c.votes || 0})</button>
+        <button class="tech-action-btn verify" onclick="verifyComment(${c.id}, '${escapeHtml(ticketId)}')">${verifyLabel}</button>
+        <button class="tech-action-btn pin" onclick="pinComment(${c.id}, '${escapeHtml(ticketId)}')">${pinLabel}</button>
+        <button class="tech-action-btn delete" onclick="deleteComment(${c.id}, '${escapeHtml(ticketId)}')">🗑️ Remove</button>
+      </div>
+    </div>
+  `;
+}
+
+async function techVoteComment(commentId, ticketId) {
+  try {
+    await apiJson(`/api/comments/${commentId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ employee_id: techUser }),
+    });
+    await loadTechComments(ticketId);
+    termPrint(`[SYS] Voted on comment #${commentId}`, 'info');
+  } catch(err) {
+    termPrint(`[ERR] Vote failed: ${err.message}`, 'alert');
+  }
+}
+
+async function verifyComment(commentId, ticketId) {
+  try {
+    await apiJson(`/api/comments/${commentId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ username: techUser, role: 'tech' }),
+    });
+    await loadTechComments(ticketId);
+    termPrint(`[SYS] Comment #${commentId} verification toggled`, 'success');
+  } catch(err) {
+    termPrint(`[ERR] Verify failed: ${err.message}`, 'alert');
+  }
+}
+
+async function pinComment(commentId, ticketId) {
+  try {
+    await apiJson(`/api/comments/${commentId}/pin`, {
+      method: 'POST',
+      body: JSON.stringify({ username: techUser, role: 'tech' }),
+    });
+    await loadTechComments(ticketId);
+    termPrint(`[SYS] Comment #${commentId} pin toggled`, 'info');
+  } catch(err) {
+    termPrint(`[ERR] Pin failed: ${err.message}`, 'alert');
+  }
+}
+
+async function deleteComment(commentId, ticketId) {
+  if(!confirm('Remove this community comment?')) return;
+  try {
+    await apiJson(`/api/comments/${commentId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ username: techUser, role: 'tech' }),
+    });
+    await loadTechComments(ticketId);
+    termPrint(`[SYS] Comment #${commentId} removed`, 'success');
+  } catch(err) {
+    termPrint(`[ERR] Delete failed: ${err.message}`, 'alert');
+  }
+}
+
+async function loadAISummary(ticketId) {
+  const container = document.getElementById(`comm-ai-summary-${ticketId}`);
+  if(!container) return;
+  
+  container.innerHTML = `<div class="community-ai-summary"><div class="ai-label">🤖 AI SUMMARY</div>Generating summary...</div>`;
+  
+  try {
+    const data = await apiJson(`/api/tickets/${encodeURIComponent(ticketId)}/comments/summary`);
+    container.innerHTML = `
+      <div class="community-ai-summary">
+        <div class="ai-label">🤖 AI SUMMARY · ${data.comment_count || 0} comments${data.has_verified ? ' · ✓ Has verified solution' : ''}</div>
+        ${escapeHtml(data.summary || 'No summary available.')}
+      </div>
+    `;
+    termPrint(`[AI] Community summary generated for #${ticketId}`, 'info');
+  } catch {
+    container.innerHTML = `<div class="community-ai-summary"><div class="ai-label">🤖 AI SUMMARY</div>Could not generate summary.</div>`;
+  }
+}
+
+</script>
+</body>
+</html>
