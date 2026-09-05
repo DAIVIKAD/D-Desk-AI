@@ -300,17 +300,23 @@
   .form-control:focus { border-color: var(--neon-purple-bright); }
   .form-control option { background: #070d22; }
 
-  /* Toast Notification */
-  #toast {
-    position: fixed; bottom: 20px; right: 20px; z-index: 300;
-    background: rgba(10, 19, 44, 0.95);
-    border: 1px solid var(--neon-purple-bright);
-    border-radius: 10px; padding: 0.8rem 1.4rem;
-    font-size: 0.82rem; font-weight: 500;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    display: none; animation: slideUp 0.3s ease;
+  /* ── RESPONSIVE STYLES ── */
+  @media (max-width: 1024px) {
+    header { padding: 0.75rem 1rem; }
+    .header-right { gap: 0.8rem; }
+    .tab-bar { padding: 0 1rem; overflow-x: auto; scrollbar-width: none; }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn { padding: 0.85rem 1rem; white-space: nowrap; flex-shrink: 0; font-size: 0.7rem; }
+    main { padding: 1.2rem 1rem; }
+    .page-head { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .table-card { overflow-x: auto; }
   }
-  @keyframes slideUp { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .user-badge { display: none; }
+  }
 </style>
 </head>
 <body>

@@ -64,6 +64,7 @@ class TicketCreateRequest(BaseModel):
     source: str = "chat"
     predicted_issue: Optional[str] = None
     prediction_confidence: Optional[float] = None
+    confidence: Optional[float] = None
     uploaded_image_path: Optional[str] = None
     image_prediction_id: Optional[str] = None
 
@@ -242,7 +243,7 @@ async def create_ticket_route(req: TicketCreateRequest):
     if req.category and req.priority:
         category = req.category
         priority = req.priority
-        confidence = float(req.confidence or ml_pred.get("confidence", 0.95))
+        confidence = float(req.confidence or req.prediction_confidence or ml_pred.get("confidence", 0.95))
         pred_issue = req.predicted_issue or category.lower()
     else:
         ai_res = await groq_classify_ticket(description, fallback_prediction=ml_pred)

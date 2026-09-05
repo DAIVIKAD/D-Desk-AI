@@ -301,7 +301,51 @@
   .tech-action-btn:hover{color:var(--text-bright);border-color:rgba(255,255,255,0.18);}
   .tech-action-btn.verify:hover{color:var(--neon-green);border-color:rgba(0,255,136,0.3);}
   .tech-action-btn.pin:hover{color:#ffaa00;border-color:rgba(255,170,0,0.3);}
-  .tech-action-btn.delete:hover{color:var(--neon-red);border-color:rgba(255,68,102,0.3);}
+  /* ── RESPONSIVE STYLES ── */
+  .mobile-tech-tabs {
+    display: none;
+    background: rgba(9, 13, 30, 0.95);
+    border-bottom: 1px solid var(--border-glow);
+    padding: 0.45rem 0.8rem;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  .m-tech-tab {
+    flex: 1;
+    padding: 0.55rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-dim);
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .m-tech-tab.active {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(168, 85, 247, 0.25));
+    border-color: var(--primary-violet);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+  }
+
+  @media (max-width: 1024px) {
+    .mobile-tech-tabs { display: flex; }
+    .layout { display: flex; flex-direction: column; }
+    .left-panel { width: 100%; border-right: none; flex: 1; min-height: 0; }
+    .left-panel.m-hidden { display: none !important; }
+    .right-panel { flex: 1; min-height: 0; }
+    .right-panel.m-hidden { display: none !important; }
+    .topbar { padding: 0.75rem 1rem; }
+    .topbar-right { gap: 0.8rem; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .summary-row { flex-wrap: wrap; }
+    .sum-box { flex: 1 1 30%; border-bottom: 1px solid var(--border-glow); }
+  }
 </style>
 </head>
 <body>
@@ -328,6 +372,12 @@
     <div class="tech-name"><div class="dot-tech"></div><span id="tech-user">TECH01</span></div>
     <button class="tb-btn" onclick="window.location='index.html'">Exit Portal</button>
   </div>
+</div>
+
+<!-- Mobile Navigation Tabs (Screens <= 1024px) -->
+<div class="mobile-tech-tabs">
+  <button class="m-tech-tab active" id="m-btn-queue" onclick="switchMobileTechView('queue')">📋 Ticket Queue</button>
+  <button class="m-tech-tab" id="m-btn-detail" onclick="switchMobileTechView('detail')">🔍 Ticket Detail</button>
 </div>
 
 <div class="layout">
@@ -637,6 +687,39 @@ function copyDraftToReply(ticketId) {
   }
 }
 
+function switchMobileTechView(view) {
+  const btnQueue = document.getElementById('m-btn-queue');
+  const btnDetail = document.getElementById('m-btn-detail');
+  const leftPanel = document.querySelector('.left-panel');
+  const rightPanel = document.querySelector('.right-panel');
+
+  if (view === 'queue') {
+    btnQueue?.classList.add('active');
+    btnDetail?.classList.remove('active');
+    leftPanel?.classList.remove('m-hidden');
+    rightPanel?.classList.add('m-hidden');
+  } else {
+    btnDetail?.classList.add('active');
+    btnQueue?.classList.remove('active');
+    rightPanel?.classList.remove('m-hidden');
+    leftPanel?.classList.add('m-hidden');
+  }
+}
+
+function initMobileTechView() {
+  if (window.innerWidth <= 1024) {
+    if (selectedTicket) {
+      switchMobileTechView('detail');
+    } else {
+      switchMobileTechView('queue');
+    }
+  } else {
+    document.querySelector('.left-panel')?.classList.remove('m-hidden');
+    document.querySelector('.right-panel')?.classList.remove('m-hidden');
+  }
+}
+window.addEventListener('resize', initMobileTechView);
+
 function openTicket(ticketId) {
   const ticket = tickets.find(item => item.ticket_id === ticketId);
   if(!ticket) {
@@ -646,6 +729,10 @@ function openTicket(ticketId) {
 
   selectedTicket = ticketId;
   renderList();
+
+  if (window.innerWidth <= 1024) {
+    switchMobileTechView('detail');
+  }
 
   const normalizedStatus = normalizeStatus(ticket.status);
   const priorityColor = { High: 'var(--neon-red)', Medium: 'var(--neon-amber)', Low: 'var(--neon-green)' }[ticket.priority];

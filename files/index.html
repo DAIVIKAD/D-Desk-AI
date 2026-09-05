@@ -226,13 +226,14 @@
     margin-top: 0.9rem;
   }
 
-  /* ── 4 Portal Cards Grid (Matches Reference Image) ── */
+  /* ── 3 Public Portal Cards Grid (Platform Admin is hidden inside 8-tap logo) ── */
   .portals-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.8rem;
     width: 100%;
-    margin-bottom: 2.5rem;
+    max-width: 1250px;
+    margin: 0 auto 2.5rem;
   }
 
   .portal-card {
@@ -567,8 +568,8 @@
   }
 
   /* ── Responsive Adjustments ── */
-  @media (max-width: 1100px) {
-    .portals-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+  @media (max-width: 1024px) {
+    .portals-grid { grid-template-columns: repeat(2, 1fr); max-width: 800px; gap: 1.5rem; }
     .page-wrapper { padding: 1.8rem 2rem; }
     .side-features-right { display: none; }
   }
@@ -577,7 +578,7 @@
     .page-wrapper { padding: 1.2rem 1.2rem; }
     .top-nav { flex-direction: column; gap: 0.8rem; align-items: center; text-align: center; }
     .top-meta-left { flex-direction: row; gap: 0.8rem; font-size: 0.72rem; }
-    .portals-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .portals-grid { grid-template-columns: 1fr; max-width: 440px; gap: 1.2rem; }
     .hero-section { margin: 1rem auto 1.5rem; }
     .brand-title { font-size: 2.2rem; }
     .bottom-features-bar { gap: 1.2rem; }
@@ -708,20 +709,6 @@
       <h2 class="portal-title">Technician</h2>
       <div class="portal-divider"></div>
       <p class="portal-desc">Manage assigned tickets and resolve issues efficiently.</p>
-      <button class="portal-btn">Enter Portal →</button>
-    </div>
-
-    <!-- 4. Platform Admin Portal Card -->
-    <div class="portal-card" onclick="openPortalModal('platform_admin')">
-      <div class="portal-icon-wrap">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 12l2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <h2 class="portal-title">Platform Admin</h2>
-      <div class="portal-divider"></div>
-      <p class="portal-desc">Complete control over users, roles, security and system configuration.</p>
       <button class="portal-btn">Enter Portal →</button>
     </div>
 

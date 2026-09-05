@@ -391,11 +391,66 @@
   }
   .log-controls .ai-btn{font-size:0.6rem;padding:0.45rem 0.9rem;}
 
+  /* ── RESPONSIVE STYLES ── */
+  .menu-toggle-btn {
+    display: none;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-glow);
+    color: var(--text-bright);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(4,6,18,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 140;
+  }
+  .sidebar-overlay.active { display: block; }
+
+  @media (max-width: 1024px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .menu-toggle-btn { display: flex; }
+    .sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 0;
+      width: 250px;
+      z-index: 150;
+      background: rgba(7, 10, 24, 0.98);
+      backdrop-filter: blur(25px);
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 10px 0 30px rgba(0,0,0,0.7);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .tabs { overflow-x: auto; padding-bottom: 0.4rem; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { white-space: nowrap; flex-shrink: 0; }
+    .topbar { padding: 0.75rem 1rem; }
+    .topbar-right { gap: 0.8rem; }
+    .status-online, .tb-time { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .main { padding: 1rem; gap: 1rem; }
+  }
+
   /* Print styles for PDF download */
   @media print {
     body,html{background:#fff!important;color:#111!important;overflow:visible!important;height:auto!important;}
     .topbar,.sidebar,.scanlines,.powered-footer,.admin-toast-stack,
-    .admin-modal-overlay,.nav-section,.nav-item,.ai-btn,.download-btn,.report-actions{display:none!important;}
+    .admin-modal-overlay,.nav-section,.nav-item,.ai-btn,.download-btn,.report-actions,.sidebar-overlay{display:none!important;}
     .layout{display:block!important;overflow:visible!important;}
     .main{overflow:visible!important;padding:1rem!important;}
     .panel{display:none!important;}
@@ -418,6 +473,7 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="tb-left">
+    <button class="menu-toggle-btn" onclick="toggleMobileSidebar()" title="Toggle Navigation">☰</button>
     <a href="index.html" class="topbar-brand">
       <div class="topbar-logo-icon">
         <svg width="22" height="22" viewBox="0 0 120 120" fill="none">
@@ -440,6 +496,7 @@
 </div>
 
 <div class="layout">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="nav-section">Dashboard</div>
@@ -1117,6 +1174,13 @@ function settledValue(result, fallback) {
   return result && result.status === 'fulfilled' ? result.value : fallback;
 }
 
+function toggleMobileSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  if (sb) sb.classList.toggle('open');
+  if (ov) ov.classList.toggle('active');
+}
+
 function switchTab(tab, el) {
   state.currentTab = tab;
   document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
@@ -1127,6 +1191,11 @@ function switchTab(tab, el) {
 
   const navItem = el || document.querySelector(`.nav-item[data-tab="${tab}"]`);
   if(navItem) navItem.classList.add('active');
+
+  if (window.innerWidth <= 1024) {
+    document.querySelector('.sidebar')?.classList.remove('open');
+    document.getElementById('sidebar-overlay')?.classList.remove('active');
+  }
 }
 
 function buildTicketTable(tbodyId, tickets) {
