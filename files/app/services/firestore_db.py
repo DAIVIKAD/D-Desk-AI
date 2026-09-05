@@ -82,6 +82,33 @@ def _db():
 #  Users Collection
 # ═══════════════════════════════════════════════════════════════════════════
 
+VALID_ROLES = {"platform_admin", "admin", "tech", "employee"}
+
+
+def normalize_role(role: str) -> str:
+    r = (role or "").strip().lower()
+    if r in ("platform_admin", "platform-admin", "superadmin", "platform admin"):
+        return "platform_admin"
+    if r in ("admin", "administrator"):
+        return "admin"
+    if r in ("tech", "technician"):
+        return "tech"
+    if r in ("employee", "user", "staff"):
+        return "employee"
+    raise ValueError(f"Invalid role '{role}'. Must be platform_admin, admin, technician, or employee.")
+
+
+def role_display_name(role: str) -> str:
+    r = (role or "").strip().lower()
+    if r == "platform_admin":
+        return "Platform Admin"
+    if r == "admin":
+        return "Admin"
+    if r in ("tech", "technician"):
+        return "Technician"
+    return "Employee"
+
+
 def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
     if not username:
         return None
@@ -90,6 +117,9 @@ def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
     if doc.exists:
         data = doc.to_dict()
         data["username"] = uname
+        data["status"] = data.get("status") or ("disabled" if data.get("is_disabled") else "active")
+        data["role"] = normalize_role(data.get("role", "employee"))
+        data["display_role"] = role_display_name(data["role"])
         return data
     return None
 
@@ -98,16 +128,25 @@ def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
     user = get_user_by_username(username)
     if not user:
         return None
+
+    # Check if account is disabled
+    if user.get("status") == "disabled" or user.get("is_disabled") is True:
+        return {
+            "status": "error",
+            "error": "account_disabled",
+            "detail": "This account is currently disabled. Please contact Platform Administration.",
+        }
+
     if verify_password(password, user.get("password_hash") or user.get("password", "")):
-        role = "technician" if user.get("role") == "tech" else user.get("role", "employee")
         return {
             "status": "ok",
             "username": user["username"],
             "role": user.get("role", "employee"),
-            "display_role": role,
+            "display_role": user.get("display_role", "Employee"),
             "name": user.get("name", user["username"]),
             "dept": user.get("dept"),
             "specialization": user.get("specialization"),
+            "account_status": user.get("status", "active"),
         }
     return None
 
@@ -117,13 +156,17 @@ def list_users() -> List[Dict[str, Any]]:
     docs = _db().collection("users").stream()
     for doc in docs:
         d = doc.to_dict()
-        role = "technician" if d.get("role") == "tech" else d.get("role", "employee")
+        role = normalize_role(d.get("role", "employee"))
+        status = d.get("status") or ("disabled" if d.get("is_disabled") else "active")
         users.append({
             "username": doc.id,
             "role": role,
+            "display_role": role_display_name(role),
             "name": d.get("name", doc.id),
             "dept": d.get("dept"),
             "specialization": d.get("specialization"),
+            "status": status,
+            "created_at": d.get("created_at"),
         })
     users.sort(key=lambda u: (u["role"], u["username"]))
     return users
@@ -138,11 +181,14 @@ def create_user(
     name: str,
     dept: Optional[str] = None,
     specialization: Optional[str] = None,
+    status: str = "active",
 ) -> Dict[str, Any]:
+    requester = get_user_by_username(admin_username)
+    requester_role = requester.get("role") if requester else None
+
     if admin_username not in ("system", "secret_override"):
-        admin = get_user_by_username(admin_username)
-        if not admin or admin.get("role") != "admin":
-            raise PermissionError("Admin privileges are required for this action.")
+        if requester_role not in ("platform_admin", "admin"):
+            raise PermissionError("Administrative privileges are required for this action.")
 
     uname = username.strip().lower()
     if not uname or not password or not name:
@@ -151,13 +197,15 @@ def create_user(
     if get_user_by_username(uname):
         raise ValueError(f"User '{uname}' already exists.")
 
-    norm_role = "tech" if role.lower() in ("tech", "technician") else role.lower()
-    if norm_role not in ("employee", "admin", "tech"):
-        raise ValueError("Role must be one of: employee, technician, admin.")
+    norm_role = normalize_role(role)
+    if norm_role == "platform_admin" and requester_role != "platform_admin" and admin_username != "system":
+        raise PermissionError("Only an existing Platform Admin can create another Platform Admin account.")
 
     norm_spec = (specialization or "").strip().lower().replace("-", "_") or None
     if norm_role == "tech" and not norm_spec:
         norm_spec = "general"
+
+    norm_status = "disabled" if (status or "").strip().lower() == "disabled" else "active"
 
     user_data = {
         "username": uname,
@@ -166,6 +214,7 @@ def create_user(
         "name": name.strip(),
         "dept": (dept or "").strip() or None,
         "specialization": norm_spec,
+        "status": norm_status,
         "created_at": _now_iso(),
     }
 
@@ -173,17 +222,87 @@ def create_user(
 
     return {
         "username": uname,
-        "role": "technician" if norm_role == "tech" else norm_role,
+        "role": norm_role,
+        "display_role": role_display_name(norm_role),
         "name": user_data["name"],
         "dept": user_data["dept"],
         "specialization": norm_spec,
+        "status": norm_status,
+    }
+
+
+def update_user_status(*, admin_username: str, username: str, status: str) -> Dict[str, Any]:
+    requester = get_user_by_username(admin_username)
+    if not requester or requester.get("role") not in ("platform_admin", "admin"):
+        raise PermissionError("Platform Admin or Admin privileges are required to modify user status.")
+
+    uname = username.strip().lower()
+    target = get_user_by_username(uname)
+    if not target:
+        raise ValueError(f"User '{username}' was not found.")
+
+    if uname == admin_username.strip().lower() and status.lower() == "disabled":
+        raise ValueError("You cannot disable your own administrator account.")
+
+    norm_status = "disabled" if status.strip().lower() == "disabled" else "active"
+    _db().collection("users").document(uname).update({
+        "status": norm_status,
+        "is_disabled": (norm_status == "disabled"),
+        "updated_at": _now_iso(),
+    })
+
+    return {
+        "username": uname,
+        "status": norm_status,
+        "message": f"User '{uname}' is now {norm_status}.",
+    }
+
+
+def update_user_role(
+    *,
+    admin_username: str,
+    username: str,
+    role: str,
+    specialization: Optional[str] = None,
+    dept: Optional[str] = None,
+) -> Dict[str, Any]:
+    requester = get_user_by_username(admin_username)
+    if not requester or requester.get("role") != "platform_admin":
+        raise PermissionError("Platform Admin privileges are required to change user roles.")
+
+    uname = username.strip().lower()
+    target = get_user_by_username(uname)
+    if not target:
+        raise ValueError(f"User '{username}' was not found.")
+
+    norm_role = normalize_role(role)
+    norm_spec = (specialization or "").strip().lower().replace("-", "_") or None
+    if norm_role == "tech" and not norm_spec:
+        norm_spec = target.get("specialization") or "general"
+
+    updates = {
+        "role": norm_role,
+        "specialization": norm_spec,
+        "updated_at": _now_iso(),
+    }
+    if dept is not None:
+        updates["dept"] = (dept or "").strip() or None
+
+    _db().collection("users").document(uname).update(updates)
+
+    return {
+        "username": uname,
+        "role": norm_role,
+        "display_role": role_display_name(norm_role),
+        "specialization": norm_spec,
+        "message": f"User '{uname}' role updated to {role_display_name(norm_role)}.",
     }
 
 
 def delete_user(*, admin_username: str, username: str) -> Dict[str, Any]:
     if admin_username not in ("system", "secret_override"):
         admin = get_user_by_username(admin_username)
-        if not admin or admin.get("role") != "admin":
+        if not admin or admin.get("role") not in ("platform_admin", "admin"):
             raise PermissionError("Admin privileges are required for this action.")
 
     uname = username.strip().lower()
@@ -194,10 +313,10 @@ def delete_user(*, admin_username: str, username: str) -> Dict[str, Any]:
     if uname == admin_username.strip().lower():
         raise ValueError("Admin users cannot delete their own account.")
 
-    if user.get("role") == "admin":
-        admin_count = len([u for u in list_users() if u["role"] == "admin"])
+    if user.get("role") in ("admin", "platform_admin"):
+        admin_count = len([u for u in list_users() if u["role"] in ("admin", "platform_admin")])
         if admin_count <= 1:
-            raise ValueError("At least one admin account must remain in the system.")
+            raise ValueError("At least one administrator account must remain in the system.")
 
     db = _db()
     db.collection("users").document(uname).delete()
@@ -211,69 +330,118 @@ def delete_user(*, admin_username: str, username: str) -> Dict[str, Any]:
     }
 
 
-def seed_default_users_if_empty() -> None:
-    """Seed demo accounts from environment variables into Firestore."""
-    admin_email = os.getenv("DEMO_ADMIN_EMAIL", "").strip()
-    admin_password = os.getenv("DEMO_ADMIN_PASSWORD", "").strip()
-    default_password = os.getenv("DEMO_DEFAULT_PASSWORD", "").strip()
+def get_platform_audit_info(admin_username: str) -> Dict[str, Any]:
+    requester = get_user_by_username(admin_username)
+    if not requester or requester.get("role") != "platform_admin":
+        raise PermissionError("Platform Admin privileges are required to access platform audit telemetry.")
 
-    if not admin_email or not admin_password:
-        logger.warning(
-            "DEMO_ADMIN_EMAIL / DEMO_ADMIN_PASSWORD not set — "
-            "skipping demo user seeding. Configure these in your .env file."
-        )
+    all_users = list_users()
+    role_counts = {"platform_admin": 0, "admin": 0, "tech": 0, "employee": 0}
+    status_counts = {"active": 0, "disabled": 0}
+
+    for u in all_users:
+        r = u.get("role", "employee")
+        role_counts[r] = role_counts.get(r, 0) + 1
+        s = u.get("status", "active")
+        status_counts[s] = status_counts.get(s, 0) + 1
+
+    ticket_stats = get_ticket_stats()
+    circulars = list_circulars()
+    reset_reqs = list_password_reset_requests()
+
+    return {
+        "platform_status": "healthy",
+        "timestamp": _now_iso(),
+        "database": {
+            "provider": "Google Cloud Firestore",
+            "project_id": Config.FIREBASE_PROJECT_ID,
+            "connected": is_firebase_connected(),
+        },
+        "users": {
+            "total": len(all_users),
+            "by_role": role_counts,
+            "by_status": status_counts,
+        },
+        "tickets": ticket_stats,
+        "active_circulars": len(circulars),
+        "pending_password_resets": len([r for r in reset_reqs if r.get("status") == "pending"]),
+        "audit_logs": [
+            {
+                "event": "Platform Admin Console Session Active",
+                "actor": admin_username,
+                "timestamp": _now_iso(),
+                "severity": "INFO",
+            },
+            {
+                "event": "Cloud Firestore Persistence Layer Synchronized",
+                "actor": "System",
+                "timestamp": _now_iso(),
+                "severity": "INFO",
+            },
+        ],
+    }
+
+
+def seed_default_users_if_empty() -> None:
+    """Seed default demo accounts into Firestore if missing."""
+    if not is_firebase_connected():
         return
 
-    if not default_password:
-        default_password = admin_password
+    default_password = os.getenv("DEMO_DEFAULT_PASSWORD", "1234").strip() or "1234"
 
     default_users = [
         {
-            "username": admin_email.lower(),
-            "password_hash": hash_password(admin_password),
-            "role": "admin",
-            "name": "Admin",
-            "dept": "IT Administration",
+            "username": "platform_admin",
+            "password_hash": hash_password(default_password),
+            "role": "platform_admin",
+            "name": "Platform Administrator",
+            "dept": "Platform Engineering",
             "specialization": None,
+            "status": "active",
             "created_at": _now_iso(),
         },
         {
             "username": "admin",
             "password_hash": hash_password(default_password),
             "role": "admin",
-            "name": "Admin User",
-            "dept": "Operations",
+            "name": "Alex Morgan",
+            "dept": "IT Operations",
             "specialization": None,
-            "created_at": _now_iso(),
-        },
-        {
-            "username": "emp001",
-            "password_hash": hash_password(default_password),
-            "role": "employee",
-            "name": "Anand Kumar",
-            "dept": "IT",
-            "specialization": None,
+            "status": "active",
             "created_at": _now_iso(),
         },
         {
             "username": "tech01",
             "password_hash": hash_password(default_password),
             "role": "tech",
-            "name": "Ravi Technician",
-            "dept": "Technical Support",
-            "specialization": "general",
+            "name": "Samira Khan",
+            "dept": "Field Support",
+            "specialization": "hardware",
+            "status": "active",
+            "created_at": _now_iso(),
+        },
+        {
+            "username": "emp001",
+            "password_hash": hash_password(default_password),
+            "role": "employee",
+            "name": "Jordan Taylor",
+            "dept": "Finance & Accounts",
+            "specialization": None,
+            "status": "active",
             "created_at": _now_iso(),
         },
     ]
 
-    db = _db()
-    users_ref = db.collection("users")
-    for u in default_users:
-        doc = users_ref.document(u["username"]).get()
-        if not doc.exists:
-            users_ref.document(u["username"]).set(u)
-
-    logger.info("Firestore: Demo users seeded/verified.")
+    try:
+        db = _db()
+        users_ref = db.collection("users")
+        for u in default_users:
+            doc = users_ref.document(u["username"]).get()
+            if not doc.exists:
+                users_ref.document(u["username"]).set(u)
+                logger.info("Firestore: Seeded missing default user '%s' (%s).", u["username"], u["role"])
+    except Exception as e:
+        logger.warning("Could not seed default users: %s", e)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -673,8 +841,8 @@ def create_circular(
     expires_in_days: Optional[int] = None,
 ) -> Dict[str, Any]:
     admin = get_user_by_username(admin_username)
-    if not admin or admin.get("role") != "admin":
-        raise PermissionError("Admin privileges are required.")
+    if not admin or admin.get("role") not in ("admin", "platform_admin"):
+        raise PermissionError("Admin or Platform Admin privileges are required.")
 
     now = datetime.utcnow()
     expires_at = (now + timedelta(days=expires_in_days)).isoformat() if expires_in_days else None
@@ -716,8 +884,8 @@ def list_circulars(target: Optional[str] = None) -> List[Dict[str, Any]]:
 
 def delete_circular(circular_id: str, admin_username: str) -> bool:
     admin = get_user_by_username(admin_username)
-    if not admin or admin.get("role") != "admin":
-        raise PermissionError("Admin privileges are required.")
+    if not admin or admin.get("role") not in ("admin", "platform_admin"):
+        raise PermissionError("Admin or Platform Admin privileges are required.")
 
     cid = circular_id.strip()
     _db().collection("circulars").document(cid).delete()
@@ -785,8 +953,8 @@ def reset_user_password(
 ) -> Dict[str, Any]:
     if admin_username not in ("system", "secret_override"):
         admin = get_user_by_username(admin_username)
-        if not admin or admin.get("role") != "admin":
-            raise PermissionError("Admin privileges are required.")
+        if not admin or admin.get("role") not in ("admin", "platform_admin"):
+            raise PermissionError("Admin or Platform Admin privileges are required.")
 
     uname = username.strip().lower()
     user = get_user_by_username(uname)

@@ -62,7 +62,7 @@ def _require_admin(admin_username: str):
     if (admin_username or "").strip().lower() in ("system", "secret_override"):
         return
     admin = get_user_by_username((admin_username or "").strip().lower())
-    if not admin or admin.get("role") != "admin":
+    if not admin or admin.get("role") not in ("admin", "platform_admin"):
         raise HTTPException(status_code=403, detail="Admin privileges are required for this action.")
 
 

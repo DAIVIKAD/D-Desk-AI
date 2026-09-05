@@ -77,6 +77,7 @@ def create_app() -> FastAPI:
     from app.routes.image import image_bp
     from app.routes.ml_routes import ml_routes_bp
     from app.routes.comments import comments_bp
+    from app.routes.platform_admin import platform_admin_bp
 
     app.include_router(auth_bp)
     app.include_router(admin_bp)
@@ -89,6 +90,7 @@ def create_app() -> FastAPI:
     app.include_router(image_bp)
     app.include_router(ml_routes_bp)
     app.include_router(comments_bp)
+    app.include_router(platform_admin_bp)
 
     # ── Serve Frontend Static Files (Strict Allowlist) ──
     base_dir = Path(__file__).resolve().parents[1]
@@ -97,6 +99,7 @@ def create_app() -> FastAPI:
         "employee.html",
         "admin.html",
         "technician.html",
+        "platform-admin.html",
     }
 
     @app.get("/")
@@ -109,10 +112,14 @@ def create_app() -> FastAPI:
         if not clean_filename or ".." in clean_filename or clean_filename.startswith("."):
             raise HTTPException(status_code=404, detail="File not found")
 
-        # Allowed frontend pages only
-        if clean_filename in allowed_html_files:
+        # Allowed frontend pages and static assets
+        if (
+            clean_filename in allowed_html_files
+            or clean_filename in {"favicon.ico", "favicon.png"}
+            or clean_filename.startswith("assets/")
+        ):
             target_path = (base_dir / clean_filename).resolve()
-            if target_path.is_file() and target_path.parent == base_dir:
+            if target_path.is_file() and (target_path.parent == base_dir or base_dir in target_path.parents):
                 return FileResponse(target_path, headers=NO_CACHE_HEADERS)
 
         raise HTTPException(status_code=404, detail="File not found")

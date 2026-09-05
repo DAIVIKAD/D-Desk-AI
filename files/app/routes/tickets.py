@@ -31,6 +31,7 @@ from app.services.groq_service import (
     groq_classify_ticket,
     groq_verify_spam,
     groq_technician_ai_help,
+    groq_agentic_ticket_analysis,
 )
 from app.services.firestore_db import (
     get_ticket,
@@ -362,16 +363,20 @@ def list_ticket_replies_route(ticket_id: str):
     return db_list_ticket_replies(ticket_id)
 
 
+@tickets_bp.get("/api/tickets/{ticket_id}/ai-assist")
+@tickets_bp.post("/api/tickets/{ticket_id}/ai-assist")
 @tickets_bp.post("/api/tickets/{ticket_id}/ai-help")
-async def ticket_ai_help_route(ticket_id: str, req: TicketAiHelpRequest):
+async def ticket_ai_help_route(ticket_id: str, req: Optional[TicketAiHelpRequest] = None):
     ticket = _get_ticket_or_404(ticket_id)
-    return await groq_technician_ai_help(
+    similar = find_similar_resolved_tickets(ticket.get("description", ""))
+    return await groq_agentic_ticket_analysis(
         ticket=ticket,
-        extra_context=req.extra_context or "",
-        requester_name=req.requester_name or req.requester_username or "",
+        similar_tickets=similar,
+        requester_name=(req.requester_name if req else None) or (req.requester_username if req else None) or "",
     )
 
 
 @tickets_bp.post("/api/tickets/similar")
+@tickets_bp.post("/api/tickets/similarity")
 def find_similar_tickets_route(req: SimilarityRequest):
     return find_similar_resolved_tickets(req.description)

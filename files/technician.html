@@ -4,58 +4,74 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D Desk AI — Technician Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg-deep:#04060f;--bg-mid:#07101e;--neon-blue:#00d4ff;--neon-green:#00ff88;
-    --neon-amber:#ffaa00;--neon-red:#ff4466;--text-bright:#e8f4ff;--text-dim:#5a7a9a;
-    --border-glow:rgba(0,212,255,0.18);--card-bg:rgba(8,16,38,0.85);
-    /* Retro terminal */
-    --term-bg:#0a0a00;--term-green:#39ff14;--term-dim:#1f6b0a;--term-amber:#c8a200;
+    --bg-deep: #050713;
+    --bg-mid: #0b0f24;
+    --primary-purple: #9333ea;
+    --primary-violet: #a855f7;
+    --brand-glow: #c084fc;
+    --neon-blue: #38bdf8;
+    --neon-green: #34d399;
+    --neon-amber: #fbbf24;
+    --neon-red: #f87171;
+    --text-bright: #ffffff;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --border-glow: rgba(139, 92, 246, 0.22);
+    --glass-bg: rgba(13, 18, 40, 0.85);
+    --card-bg: rgba(13, 18, 40, 0.75);
+    --card-hover-border: rgba(168, 85, 247, 0.55);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Exo 2',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-  .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+  .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.02) 2px,rgba(0,0,0,0.02) 4px);}
 
   /* TOPBAR */
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.6rem;background:rgba(4,6,18,0.95);border-bottom:1px solid var(--border-glow);flex-shrink:0;z-index:50;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0.85rem 2rem;background:rgba(9, 13, 30, 0.95);border-bottom:1px solid var(--border-glow);backdrop-filter:blur(20px);flex-shrink:0;z-index:50;}
   .tb-left{display:flex;align-items:center;gap:1.2rem;}
-  .brand{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--neon-blue);}
-  .tech-badge{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);color:#ff6b35;font-size:0.6rem;padding:0.2rem 0.7rem;border-radius:20px;font-family:'Share Tech Mono',monospace;letter-spacing:0.1em;}
-  .tb-right{display:flex;align-items:center;gap:1rem;}
-  .tech-name{font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--neon-amber);display:flex;align-items:center;gap:0.4rem;}
-  .dot-tech{width:6px;height:6px;border-radius:50%;background:var(--neon-amber);box-shadow:0 0 6px var(--neon-amber);animation:blink 2s infinite;}
+  .topbar-brand{display:flex;align-items:center;gap:0.75rem;text-decoration:none;}
+  .topbar-logo-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg, #7c3aed, #c084fc);display:flex;align-items:center;justify-content:center;box-shadow:0 0 15px rgba(168,85,247,0.45);}
+  .brand{font-size:1.05rem;font-weight:800;letter-spacing:-0.01em;color:#fff;}
+  .brand .ai-tag{color:var(--brand-glow);}
+  .tech-badge{background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);color:var(--neon-amber);font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:9999px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+  .tb-right{display:flex;align-items:center;gap:1.2rem;}
+  .tech-name{font-size:0.75rem;font-weight:600;color:var(--text-bright);display:flex;align-items:center;gap:0.5rem;background:rgba(13,18,40,0.85);border:1px solid var(--border-glow);padding:0.4rem 0.9rem;border-radius:9999px;}
+  .dot-tech{width:7px;height:7px;border-radius:50%;background:var(--neon-amber);box-shadow:0 0 8px var(--neon-amber);animation:blink 2s infinite;}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-  .tb-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);padding:0.35rem 0.9rem;border-radius:6px;font-size:0.7rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
-  .tb-btn:hover{border-color:var(--neon-red);color:var(--neon-red);}
+  .tb-btn{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:0.4rem 0.95rem;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+  .tb-btn:hover{background:rgba(239,68,68,0.2);border-color:#ef4444;box-shadow:0 0 15px rgba(239,68,68,0.3);}
 
   /* LAYOUT */
   .layout{display:flex;flex:1;overflow:hidden;}
 
   /* LEFT PANEL — Ticket Queue */
-  .left-panel{width:420px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border-glow);overflow:hidden;}
+  .left-panel{width:420px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border-glow);background:rgba(7, 10, 24, 0.85);overflow:hidden;}
 
   /* Summary row */
-  .summary-row{display:flex;gap:0;border-bottom:1px solid var(--border-glow);flex-shrink:0;}
-  .sum-box{flex:1;padding:0.8rem 1rem;text-align:center;border-right:1px solid var(--border-glow);}
+  .summary-row{display:flex;gap:0;border-bottom:1px solid var(--border-glow);flex-shrink:0;background:rgba(13,18,40,0.5);}
+  .sum-box{flex:1;padding:0.9rem 1rem;text-align:center;border-right:1px solid var(--border-glow);}
   .sum-box:last-child{border-right:none;}
-  .sum-val{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;}
-  .sum-label{font-size:0.58rem;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;font-family:'Share Tech Mono',monospace;margin-top:0.2rem;}
+  .sum-val{font-size:1.4rem;font-weight:800;color:var(--brand-glow);}
+  .sum-label{font-size:0.62rem;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;font-weight:700;margin-top:0.2rem;}
 
   /* Filters */
-  .filter-bar{display:flex;gap:0.4rem;padding:0.8rem 1rem;border-bottom:1px solid var(--border-glow);flex-shrink:0;overflow-x:auto;}
-  .filter-chip{padding:0.25rem 0.7rem;border-radius:20px;font-size:0.65rem;cursor:pointer;border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);white-space:nowrap;transition:all 0.2s;font-family:'Share Tech Mono',monospace;}
-  .filter-chip.active{background:rgba(0,212,255,0.1);color:var(--neon-blue);border-color:rgba(0,212,255,0.3);}
-  .filter-chip:hover:not(.active){color:var(--text-bright);}
+  .filter-bar{display:flex;gap:0.5rem;padding:0.85rem 1rem;border-bottom:1px solid var(--border-glow);flex-shrink:0;overflow-x:auto;}
+  .filter-chip{padding:0.35rem 0.8rem;border-radius:9999px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);background:rgba(255,255,255,0.03);white-space:nowrap;transition:all 0.2s;}
+  .filter-chip.active{background:linear-gradient(135deg, rgba(124,58,237,0.4), rgba(168,85,247,0.25));color:#fff;border-color:var(--primary-violet);box-shadow:0 0 12px rgba(168,85,247,0.25);}
+  .filter-chip:hover:not(.active){color:var(--text-bright);border-color:rgba(255,255,255,0.2);}
 
   /* Ticket list */
-  .ticket-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+  .ticket-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(168,85,247,0.2) transparent;}
   .ticket-list::-webkit-scrollbar{width:3px;}
-  .ticket-list::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);}
+  .ticket-list::-webkit-scrollbar-thumb{background:rgba(168,85,247,0.2);}
 
-  .tk-item{padding:0.9rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:all 0.2s;position:relative;border-left:3px solid transparent;}
-  .tk-item:hover{background:rgba(0,212,255,0.04);}
-  .tk-item.active-ticket{background:rgba(0,212,255,0.07);border-left-color:var(--neon-blue);}
+  .tk-item{padding:1rem 1.1rem;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:all 0.2s;position:relative;border-left:3px solid transparent;}
+  .tk-item:hover{background:rgba(168,85,247,0.06);}
+  .tk-item.active-ticket{background:rgba(168,85,247,0.12);border-left-color:var(--primary-violet);}
   .tk-item.high-priority{border-left-color:var(--neon-red);}
   .tk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;}
   .tk-id{font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--neon-blue);}
@@ -294,12 +310,23 @@
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="tb-left">
-    <div class="brand">D Desk AI</div>
-    <div class="tech-badge">TECHNICIAN</div>
+    <a href="index.html" class="topbar-brand">
+      <div class="topbar-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 120 120" fill="none">
+          <path d="M 22 22 C 22 16.48 26.48 12 32 12 L 64 12 C 85.54 12 103 29.46 103 51 C 103 72.54 85.54 90 64 90 L 32 90 C 26.48 90 22 85.52 22 80 Z" fill="#ffffff"/>
+          <path d="M 38 27 L 62 27 C 75.25 27 86 37.75 86 51 C 86 64.25 75.25 75 62 75 L 38 75 Z" fill="#7c3aed"/>
+          <rect x="44" y="37" width="34" height="26" rx="9" fill="#3b0764" stroke="#ffffff" stroke-width="1.8"/>
+          <circle cx="54" cy="50" r="3" fill="#ffffff"/>
+          <circle cx="66" cy="50" r="3" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="brand">D Desk <span class="ai-tag">Ai</span></div>
+      <div class="tech-badge">TECHNICIAN</div>
+    </a>
   </div>
   <div class="tb-right">
     <div class="tech-name"><div class="dot-tech"></div><span id="tech-user">TECH01</span></div>
-    <button class="tb-btn" onclick="window.location='index.html'">LOGOUT</button>
+    <button class="tb-btn" onclick="window.location='index.html'">Exit Portal</button>
   </div>
 </div>
 

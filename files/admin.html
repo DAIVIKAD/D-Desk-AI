@@ -4,58 +4,76 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D Desk AI — Admin Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg-deep:#04060f;--bg-mid:#07101e;--neon-blue:#00d4ff;--neon-green:#00ff88;
-    --neon-amber:#ffaa00;--neon-red:#ff4466;--text-bright:#e8f4ff;--text-dim:#5a7a9a;
-    --border-glow:rgba(0,212,255,0.18);--glass-bg:rgba(7,14,32,0.8);--card-bg:rgba(8,16,38,0.85);
+    --bg-deep: #050713;
+    --bg-mid: #0b0f24;
+    --primary-purple: #9333ea;
+    --primary-violet: #a855f7;
+    --brand-glow: #c084fc;
+    --neon-blue: #38bdf8;
+    --neon-green: #34d399;
+    --neon-amber: #fbbf24;
+    --neon-red: #f87171;
+    --text-bright: #ffffff;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --border-glow: rgba(139, 92, 246, 0.22);
+    --glass-bg: rgba(13, 18, 40, 0.85);
+    --card-bg: rgba(13, 18, 40, 0.75);
+    --card-hover-border: rgba(168, 85, 247, 0.55);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Exo 2',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-  .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+  .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.02) 2px,rgba(0,0,0,0.02) 4px);}
 
   /* TOPBAR */
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.6rem;background:rgba(4,6,18,0.95);border-bottom:1px solid var(--border-glow);flex-shrink:0;z-index:50;position:relative;}
-  .tb-left{display:flex;align-items:center;gap:1.5rem;}
-  .brand{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--neon-blue);}
-  .admin-badge{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--neon-green);font-size:0.6rem;padding:0.2rem 0.7rem;border-radius:20px;font-family:'Share Tech Mono',monospace;letter-spacing:0.1em;}
-  .tb-right{display:flex;align-items:center;gap:1rem;}
-  .tb-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);padding:0.35rem 0.9rem;border-radius:6px;font-size:0.7rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
-  .tb-btn:hover{border-color:var(--neon-blue);color:var(--neon-blue);}
-  .tb-time{font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);}
-  .status-online{display:flex;align-items:center;gap:0.4rem;font-size:0.65rem;color:var(--neon-green);font-family:'Share Tech Mono',monospace;}
-  .dot-online{width:6px;height:6px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 6px var(--neon-green);animation:blink 2s infinite;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0.85rem 2rem;background:rgba(9, 13, 30, 0.95);border-bottom:1px solid var(--border-glow);backdrop-filter:blur(20px);flex-shrink:0;z-index:50;position:relative;}
+  .tb-left{display:flex;align-items:center;gap:1.2rem;}
+  .topbar-brand{display:flex;align-items:center;gap:0.75rem;text-decoration:none;}
+  .topbar-logo-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg, #7c3aed, #c084fc);display:flex;align-items:center;justify-content:center;box-shadow:0 0 15px rgba(168,85,247,0.45);}
+  .brand{font-size:1.05rem;font-weight:800;letter-spacing:-0.01em;color:#fff;}
+  .brand .ai-tag{color:var(--brand-glow);}
+  .admin-badge{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:var(--neon-green);font-size:0.68rem;padding:0.2rem 0.65rem;border-radius:9999px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+  .tb-right{display:flex;align-items:center;gap:1.2rem;}
+  .tb-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);padding:0.4rem 0.95rem;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+  .tb-btn:hover{border-color:var(--primary-violet);color:#fff;background:rgba(168,85,247,0.15);}
+  .tb-time{font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--text-dim);}
+  .status-online{display:flex;align-items:center;gap:0.45rem;font-size:0.72rem;color:var(--neon-green);font-weight:600;}
+  .dot-online{width:7px;height:7px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 8px var(--neon-green);animation:blink 2s infinite;}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
   /* LAYOUT */
   .layout{display:flex;flex:1;overflow:hidden;}
 
   /* SIDEBAR */
-  .sidebar{width:200px;flex-shrink:0;background:rgba(4,6,18,0.9);border-right:1px solid var(--border-glow);padding:1.2rem 0.8rem;display:flex;flex-direction:column;gap:0.3rem;overflow-y:auto;}
-  .nav-section{font-size:0.58rem;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;font-family:'Share Tech Mono',monospace;padding:0.8rem 0.6rem 0.3rem;}
-  .nav-item{display:flex;align-items:center;gap:0.7rem;padding:0.6rem 0.8rem;border-radius:8px;cursor:pointer;font-size:0.78rem;transition:all 0.2s;color:var(--text-dim);border:1px solid transparent;}
-  .nav-item:hover,.nav-item.active{background:rgba(0,212,255,0.07);color:var(--neon-blue);border-color:rgba(0,212,255,0.12);}
-  .nav-item .icon{font-size:0.95rem;width:20px;text-align:center;}
+  .sidebar{width:220px;flex-shrink:0;background:rgba(7, 10, 24, 0.9);border-right:1px solid var(--border-glow);padding:1.4rem 0.9rem;display:flex;flex-direction:column;gap:0.4rem;overflow-y:auto;}
+  .nav-section{font-size:0.62rem;letter-spacing:0.15em;color:var(--text-muted);text-transform:uppercase;font-weight:700;padding:0.8rem 0.6rem 0.3rem;}
+  .nav-item{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.85rem;border-radius:10px;cursor:pointer;font-size:0.82rem;font-weight:500;transition:all 0.2s;color:var(--text-dim);border:1px solid transparent;}
+  .nav-item:hover,.nav-item.active{background:rgba(168,85,247,0.12);color:#fff;border-color:rgba(168,85,247,0.25);}
+  .nav-item .icon{font-size:1rem;width:22px;text-align:center;}
 
   /* MAIN CONTENT */
-  .main{flex:1;overflow-y:auto;padding:1.4rem;display:flex;flex-direction:column;gap:1.2rem;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+  .main{flex:1;overflow-y:auto;padding:1.6rem;display:flex;flex-direction:column;gap:1.4rem;scrollbar-width:thin;scrollbar-color:rgba(168,85,247,0.2) transparent;}
   .main::-webkit-scrollbar{width:4px;}
-  .main::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:2px;}
+  .main::-webkit-scrollbar-thumb{background:rgba(168,85,247,0.2);border-radius:2px;}
 
   /* Tabs */
-  .tabs{display:flex;gap:0.5rem;flex-shrink:0;}
-  .tab{padding:0.5rem 1.2rem;border-radius:8px;font-size:0.72rem;cursor:pointer;font-family:'Orbitron',sans-serif;font-weight:600;letter-spacing:0.08em;transition:all 0.2s;border:1px solid rgba(255,255,255,0.07);color:var(--text-dim);}
-  .tab.active{background:rgba(0,212,255,0.1);color:var(--neon-blue);border-color:rgba(0,212,255,0.3);}
-  .tab:hover:not(.active){color:var(--text-bright);}
+  .tabs{display:flex;gap:0.6rem;flex-shrink:0;}
+  .tab{padding:0.6rem 1.3rem;border-radius:10px;font-size:0.8rem;cursor:pointer;font-weight:600;letter-spacing:0.02em;transition:all 0.2s;border:1px solid rgba(255,255,255,0.08);color:var(--text-dim);background:rgba(13,18,40,0.6);}
+  .tab.active{background:linear-gradient(135deg, rgba(124,58,237,0.35), rgba(168,85,247,0.2));color:#fff;border-color:var(--primary-violet);box-shadow:0 0 15px rgba(168,85,247,0.25);}
+  .tab:hover:not(.active){color:var(--text-bright);border-color:rgba(255,255,255,0.18);}
 
   /* Panel visibility */
   .panel{display:none;}
-  .panel.active{display:flex;flex-direction:column;gap:1.2rem;animation:fade-in 0.3s ease;}
+  .panel.active{display:flex;flex-direction:column;gap:1.4rem;animation:fade-in 0.3s ease;}
   @keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
   /* STAT CARDS */
-  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;}
   .stat-card{background:var(--card-bg);border:1px solid var(--border-glow);border-radius:16px;padding:1.2rem 1.4rem;position:relative;overflow:hidden;transition:all 0.3s;}
   .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.4);}
   .stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 0 0 60px;background:var(--stat-accent,rgba(0,212,255,0.08));}
@@ -400,13 +418,24 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="tb-left">
-    <div class="brand">D Desk AI</div>
-    <div class="admin-badge">ADMIN PANEL</div>
+    <a href="index.html" class="topbar-brand">
+      <div class="topbar-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 120 120" fill="none">
+          <path d="M 22 22 C 22 16.48 26.48 12 32 12 L 64 12 C 85.54 12 103 29.46 103 51 C 103 72.54 85.54 90 64 90 L 32 90 C 26.48 90 22 85.52 22 80 Z" fill="#ffffff"/>
+          <path d="M 38 27 L 62 27 C 75.25 27 86 37.75 86 51 C 86 64.25 75.25 75 62 75 L 38 75 Z" fill="#7c3aed"/>
+          <rect x="44" y="37" width="34" height="26" rx="9" fill="#3b0764" stroke="#ffffff" stroke-width="1.8"/>
+          <circle cx="54" cy="50" r="3" fill="#ffffff"/>
+          <circle cx="66" cy="50" r="3" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="brand">D Desk <span class="ai-tag">Ai</span></div>
+      <div class="admin-badge">ADMIN CONSOLE</div>
+    </a>
   </div>
   <div class="tb-right">
     <div class="status-online"><div class="dot-online"></div>All Systems Online</div>
     <div class="tb-time" id="live-time">--:--:--</div>
-    <button class="tb-btn" onclick="window.location='index.html'">LOGOUT</button>
+    <button class="tb-btn" onclick="window.location='index.html'">Exit Portal</button>
   </div>
 </div>
 

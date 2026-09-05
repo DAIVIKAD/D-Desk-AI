@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Administration – D Desk AI</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #050713;
+    --bg-mid: #0b0f24;
+    --primary-purple: #9333ea;
+    --primary-violet: #a855f7;
+    --brand-glow: #c084fc;
+    --neon-blue: #38bdf8;
+    --neon-green: #34d399;
+    --neon-amber: #fbbf24;
+    --neon-red: #f87171;
+    --border-glow: rgba(139, 92, 246, 0.25);
+    --text-bright: #ffffff;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --card-bg: rgba(13, 18, 40, 0.75);
+    --card-hover-border: rgba(168, 85, 247, 0.55);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-bright);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  header {
+    background: rgba(9, 13, 30, 0.95);
+    border-bottom: 1px solid var(--border-glow);
+    padding: 0.85rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+  .header-left { display:flex; align-items:center; gap:1.2rem; }
+  .logo-wrap { display:flex; align-items:center; gap:0.75rem; text-decoration:none; }
+  .logo-img { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg, #7c3aed, #c084fc); display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px rgba(168,85,247,0.45); }
+  .brand-title {
+    font-size:1.05rem; font-weight:800;
+    color: #ffffff;
+    letter-spacing:-0.01em;
+  }
+  .brand-title .ai-tag { color: var(--brand-glow); }
+  .portal-tag {
+    font-size:0.68rem; font-weight:700;
+    color: var(--brand-glow);
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .header-right { display:flex; align-items:center; gap:1.2rem; }
+  .user-badge {
+    display:flex; align-items:center; gap:0.6rem;
+    font-family:'Share Tech Mono', monospace; font-size:0.75rem;
+    color: var(--text-dim);
+  }
+  .user-badge span { color:var(--text-bright); font-weight:600; }
+  .btn-logout {
+    font-family:'Orbitron', sans-serif;
+    font-size:0.65rem; font-weight:700;
+    padding: 0.45rem 1rem; border-radius:8px;
+    background: rgba(255,51,102,0.15);
+    border: 1px solid rgba(255,51,102,0.4);
+    color: var(--neon-red);
+    cursor:pointer; transition:all 0.2s;
+    letter-spacing:0.08em; text-transform:uppercase;
+  }
+  .btn-logout:hover {
+    background: rgba(255,51,102,0.25);
+    box-shadow: 0 0 15px rgba(255,51,102,0.3);
+  }
+
+  /* Navigation Tabs */
+  .tab-bar {
+    background: rgba(10, 19, 44, 0.6);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 2rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .tab-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 1rem 1.4rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .tab-btn:hover { color: var(--text-bright); }
+  .tab-btn.active {
+    color: var(--neon-purple-bright);
+    border-bottom-color: var(--neon-purple-bright);
+    background: rgba(157,78,221,0.06);
+  }
+
+  /* Main Container */
+  main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    margin-bottom: 1.5rem;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-bright);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Action Buttons */
+  .btn-primary {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem; font-weight: 700;
+    padding: 0.55rem 1.1rem; border-radius: 8px;
+    background: linear-gradient(135deg, rgba(157,78,221,0.3), rgba(0,212,255,0.2));
+    border: 1px solid var(--neon-purple);
+    color: #fff;
+    cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, rgba(157,78,221,0.5), rgba(0,212,255,0.35));
+    box-shadow: 0 0 20px rgba(157,78,221,0.4);
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; }
+  th {
+    background: rgba(157,78,221,0.08);
+    color: var(--neon-purple-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: 600;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text-bright);
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge-platform_admin { background: rgba(157,78,221,0.15); color: var(--neon-purple-bright); border: 1px solid rgba(157,78,221,0.4); }
+  .badge-admin { background: rgba(0,255,136,0.12); color: var(--neon-green); border: 1px solid rgba(0,255,136,0.3); }
+  .badge-tech { background: rgba(255,170,0,0.12); color: var(--neon-amber); border: 1px solid rgba(255,170,0,0.3); }
+  .badge-employee { background: rgba(0,212,255,0.12); color: var(--neon-blue); border: 1px solid rgba(0,212,255,0.3); }
+  .badge-active { background: rgba(0,255,136,0.12); color: var(--neon-green); border: 1px solid rgba(0,255,136,0.3); }
+  .badge-disabled { background: rgba(255,51,102,0.12); color: var(--neon-red); border: 1px solid rgba(255,51,102,0.3); }
+
+  /* Quick Actions in Table */
+  .action-btns { display: flex; gap: 0.4rem; align-items: center; }
+  .btn-sm {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.72rem; font-weight: 600;
+    padding: 0.28rem 0.6rem; border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-status-toggle {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.15);
+    color: var(--text-dim);
+  }
+  .btn-status-toggle:hover { color: #fff; border-color: var(--neon-blue); }
+  .btn-role-edit {
+    background: rgba(157,78,221,0.12);
+    border-color: rgba(157,78,221,0.3);
+    color: var(--neon-purple-bright);
+  }
+  .btn-role-edit:hover { background: rgba(157,78,221,0.25); }
+  .btn-pwd-reset {
+    background: rgba(0,212,255,0.12);
+    border-color: rgba(0,212,255,0.3);
+    color: var(--neon-blue);
+  }
+  .btn-pwd-reset:hover { background: rgba(0,212,255,0.25); }
+  .btn-del {
+    background: rgba(255,51,102,0.12);
+    border-color: rgba(255,51,102,0.3);
+    color: var(--neon-red);
+  }
+  .btn-del:hover { background: rgba(255,51,102,0.25); }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: rgba(10, 19, 44, 0.6);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 1.2rem;
+  }
+  .stat-title { font-family: 'Share Tech Mono', monospace; font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.3rem; }
+  .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text-bright); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(3, 6, 17, 0.85);
+    backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-glow);
+    border-radius: 16px;
+    width: 460px; max-width: 95vw;
+    padding: 2rem;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+  }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; }
+  .modal-head h3 { font-family:'Orbitron', sans-serif; font-size:1rem; color:var(--text-bright); }
+  .modal-close-btn { background:none; border:none; color:var(--text-dim); font-size:1.2rem; cursor:pointer; }
+  .modal-close-btn:hover { color:#fff; }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display:block; font-family:'Share Tech Mono', monospace; font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; margin-bottom:0.4rem; }
+  .form-control {
+    width: 100%; padding: 0.65rem 0.9rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; color: #fff;
+    font-family: 'Exo 2', sans-serif; font-size: 0.85rem;
+    outline: none;
+  }
+  .form-control:focus { border-color: var(--neon-purple-bright); }
+  .form-control option { background: #070d22; }
+
+  /* Toast Notification */
+  #toast {
+    position: fixed; bottom: 20px; right: 20px; z-index: 300;
+    background: rgba(10, 19, 44, 0.95);
+    border: 1px solid var(--neon-purple-bright);
+    border-radius: 10px; padding: 0.8rem 1.4rem;
+    font-size: 0.82rem; font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    display: none; animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a href="index.html" class="logo-wrap">
+      <div class="logo-img">
+        <svg width="22" height="22" viewBox="0 0 120 120" fill="none">
+          <path d="M 22 22 C 22 16.48 26.48 12 32 12 L 64 12 C 85.54 12 103 29.46 103 51 C 103 72.54 85.54 90 64 90 L 32 90 C 26.48 90 22 85.52 22 80 Z" fill="#ffffff"/>
+          <path d="M 38 27 L 62 27 C 75.25 27 86 37.75 86 51 C 86 64.25 75.25 75 62 75 L 38 75 Z" fill="#7c3aed"/>
+          <rect x="44" y="37" width="34" height="26" rx="9" fill="#3b0764" stroke="#ffffff" stroke-width="1.8"/>
+          <circle cx="54" cy="50" r="3" fill="#ffffff"/>
+          <circle cx="66" cy="50" r="3" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="brand-title">D Desk <span class="ai-tag">Ai</span></div>
+    </a>
+    <span class="portal-tag">Platform Administration</span>
+  </div>
+  <div class="header-right">
+    <div class="user-badge">
+      Authenticated as: <span id="current-admin-display">—</span>
+      <span class="badge badge-platform_admin">Platform Admin</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Exit Console</button>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('users-tab', this)">
+    <span>👥</span> User & Role Management
+  </button>
+  <button class="tab-btn" onclick="switchTab('resets-tab', this)">
+    <span>🔑</span> Password Reset Requests
+  </button>
+  <button class="tab-btn" onclick="switchTab('audit-tab', this)">
+    <span>🛡️</span> System & Security Audit
+  </button>
+</div>
+
+<main>
+  <!-- TAB 1: USERS & ROLES -->
+  <section id="users-tab" class="tab-content active">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>👥</span> User Accounts & Authorization Roles
+        </div>
+        <button class="btn-primary" onclick="openCreateUserModal()">+ Create New Account</button>
+      </div>
+
+      <div style="display:flex; gap:1rem; margin-bottom:1rem; align-items:center;">
+        <input type="text" id="user-search" class="form-control" style="max-width:300px;" placeholder="Search by name, username, dept..." oninput="renderUsersTable()">
+        <select id="role-filter" class="form-control" style="max-width:180px;" onchange="renderUsersTable()">
+          <option value="">All Roles</option>
+          <option value="platform_admin">Platform Admin</option>
+          <option value="admin">Admin</option>
+          <option value="tech">Technician</option>
+          <option value="employee">Employee</option>
+        </select>
+        <select id="status-filter" class="form-control" style="max-width:160px;" onchange="renderUsersTable()">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="disabled">Disabled</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Full Name</th>
+              <th>Role</th>
+              <th>Department</th>
+              <th>Specialization</th>
+              <th>Account Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="7" style="text-align:center; color:var(--text-dim);">Loading user accounts...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: PASSWORD RESETS -->
+  <section id="resets-tab" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🔑</span> Password Reset & Account Recovery Requests
+        </div>
+        <button class="btn-primary" onclick="loadResetRequests()">Refresh Requests</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Note</th>
+              <th>Requested At</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="resets-tbody">
+            <tr><td colspan="7" style="text-align:center; color:var(--text-dim);">Loading reset requests...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: SYSTEM AUDIT -->
+  <section id="audit-tab" class="tab-content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">Total Users</div>
+        <div class="stat-value" id="stat-total-users">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Platform Admins</div>
+        <div class="stat-value" id="stat-platform-admins" style="color:var(--neon-purple-bright);">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Active Tickets</div>
+        <div class="stat-value" id="stat-active-tickets" style="color:var(--neon-blue);">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Firestore Health</div>
+        <div class="stat-value" id="stat-db-status" style="color:var(--neon-green); font-size:1.1rem; margin-top:0.3rem;">Connected</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>🛡️</span> Security & System Telemetry Logs
+        </div>
+        <button class="btn-primary" onclick="loadAuditTelemetry()">Refresh Telemetry</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Actor</th>
+              <th>Severity</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="audit-tbody">
+            <tr><td colspan="4" style="text-align:center; color:var(--text-dim);">Loading telemetry...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Create User Modal -->
+<div class="modal-overlay" id="create-user-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Create New Account</h3>
+      <button class="modal-close-btn" onclick="closeModal('create-user-modal')">✕</button>
+    </div>
+    <form onsubmit="submitCreateUser(event)">
+      <div class="form-group">
+        <label>Role</label>
+        <select id="new-user-role" class="form-control" onchange="toggleSpecField()" required>
+          <option value="employee">Employee</option>
+          <option value="tech">Technician</option>
+          <option value="admin">Admin</option>
+          <option value="platform_admin">Platform Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Username / Email</label>
+        <input type="text" id="new-user-username" class="form-control" placeholder="e.g. dev_admin" required>
+      </div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="new-user-name" class="form-control" placeholder="e.g. Morgan Vance" required>
+      </div>
+      <div class="form-group">
+        <label>Initial Password</label>
+        <input type="password" id="new-user-password" class="form-control" placeholder="••••••••" required>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <input type="text" id="new-user-dept" class="form-control" placeholder="e.g. Core Infrastructure">
+      </div>
+      <div class="form-group" id="spec-group" style="display:none;">
+        <label>Technician Specialization</label>
+        <select id="new-user-spec" class="form-control">
+          <option value="general">General Support</option>
+          <option value="hardware">Hardware</option>
+          <option value="software">Software</option>
+          <option value="networking">Networking</option>
+          <option value="printer_support">Printer Support</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%; margin-top:0.8rem;">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div class="modal-overlay" id="edit-role-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Modify Authorization Role</h3>
+      <button class="modal-close-btn" onclick="closeModal('edit-role-modal')">✕</button>
+    </div>
+    <form onsubmit="submitRoleChange(event)">
+      <input type="hidden" id="edit-role-username">
+      <div class="form-group">
+        <label>Target Account</label>
+        <input type="text" id="edit-role-user-display" class="form-control" readonly style="opacity:0.7;">
+      </div>
+      <div class="form-group">
+        <label>Assign Role</label>
+        <select id="edit-role-select" class="form-control" onchange="toggleEditSpecField()" required>
+          <option value="employee">Employee</option>
+          <option value="tech">Technician</option>
+          <option value="admin">Admin</option>
+          <option value="platform_admin">Platform Admin</option>
+        </select>
+      </div>
+      <div class="form-group" id="edit-spec-group" style="display:none;">
+        <label>Technician Specialization</label>
+        <select id="edit-role-spec" class="form-control">
+          <option value="general">General Support</option>
+          <option value="hardware">Hardware</option>
+          <option value="software">Software</option>
+          <option value="networking">Networking</option>
+          <option value="printer_support">Printer Support</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%; margin-top:0.8rem;">Update Role</button>
+    </form>
+  </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="reset-pwd-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Reset User Password</h3>
+      <button class="modal-close-btn" onclick="closeModal('reset-pwd-modal')">✕</button>
+    </div>
+    <form onsubmit="submitPasswordReset(event)">
+      <input type="hidden" id="reset-pwd-username">
+      <input type="hidden" id="reset-pwd-request-id">
+      <div class="form-group">
+        <label>Target Username</label>
+        <input type="text" id="reset-pwd-user-display" class="form-control" readonly style="opacity:0.7;">
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="reset-pwd-new" class="form-control" placeholder="Minimum 4 characters" required>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%; margin-top:0.8rem;">Save New Password</button>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let currentAdminUser = null;
+let allUsersList = [];
+
+// ── Auth & Session Guard ──
+function checkSession() {
+  const raw = sessionStorage.getItem("platform_admin_user");
+  if (!raw) {
+    window.location.href = "index.html";
+    return;
+  }
+  try {
+    currentAdminUser = JSON.parse(raw);
+    if (currentAdminUser.role !== "platform_admin") {
+      window.location.href = "index.html";
+      return;
+    }
+    document.getElementById("current-admin-display").textContent = currentAdminUser.name || currentAdminUser.username;
+  } catch (e) {
+    window.location.href = "index.html";
+  }
+}
+checkSession();
+
+function logout() {
+  sessionStorage.removeItem("platform_admin_user");
+  sessionStorage.removeItem("nd_user");
+  sessionStorage.removeItem("nd_role");
+  window.location.href = "index.html";
+}
+
+function showToast(msg, isErr = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.borderColor = isErr ? "var(--neon-red)" : "var(--neon-purple-bright)";
+  t.style.display = "block";
+  setTimeout(() => { t.style.display = "none"; }, 3500);
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  document.getElementById(tabId)?.classList.add("active");
+  btn.classList.add("active");
+
+  if (tabId === "users-tab") loadUsers();
+  else if (tabId === "resets-tab") loadResetRequests();
+  else if (tabId === "audit-tab") loadAuditTelemetry();
+}
+
+// ── Modals ──
+function openModal(id) { document.getElementById(id)?.classList.add("active"); }
+function closeModal(id) { document.getElementById(id)?.classList.remove("active"); }
+
+function toggleSpecField() {
+  const role = document.getElementById("new-user-role").value;
+  document.getElementById("spec-group").style.display = (role === "tech") ? "block" : "none";
+}
+
+function toggleEditSpecField() {
+  const role = document.getElementById("edit-role-select").value;
+  document.getElementById("edit-spec-group").style.display = (role === "tech") ? "block" : "none";
+}
+
+// ── User Management ──
+async function loadUsers() {
+  try {
+    const res = await fetch(`/api/platform-admin/users?admin_username=${encodeURIComponent(currentAdminUser.username)}`);
+    if (!res.ok) throw new Error("Could not fetch users list.");
+    allUsersList = await res.json();
+    renderUsersTable();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById("users-tbody");
+  const query = (document.getElementById("user-search")?.value || "").toLowerCase();
+  const roleFilter = document.getElementById("role-filter")?.value;
+  const statusFilter = document.getElementById("status-filter")?.value;
+
+  const filtered = allUsersList.filter(u => {
+    if (query && !u.username.toLowerCase().includes(query) && !(u.name||"").toLowerCase().includes(query) && !(u.dept||"").toLowerCase().includes(query)) {
+      return false;
+    }
+    if (roleFilter && u.role !== roleFilter) return false;
+    if (statusFilter && (u.status || "active") !== statusFilter) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-dim);">No accounts match the selected criteria.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(u => {
+    const isMe = u.username.toLowerCase() === currentAdminUser.username.toLowerCase();
+    const status = u.status || "active";
+    const statusLabel = status === "active" ? "Active" : "Disabled";
+    const statusBadge = `<span class="badge badge-${status}">${statusLabel}</span>`;
+    const roleBadge = `<span class="badge badge-${u.role}">${u.display_role || u.role}</span>`;
+
+    const toggleAction = isMe ? "" : `
+      <button class="btn-sm btn-status-toggle" onclick="toggleUserStatus('${u.username}', '${status}')" title="${status==='active'?'Disable Account':'Enable Account'}">
+        ${status==='active'?'⏸ Disable':'▶ Enable'}
+      </button>
+    `;
+
+    const roleAction = isMe ? "" : `
+      <button class="btn-sm btn-role-edit" onclick="openRoleModal('${u.username}', '${u.role}', '${u.specialization||''}')" title="Change Role">
+        ⚡ Role
+      </button>
+    `;
+
+    const deleteAction = isMe ? "" : `
+      <button class="btn-sm btn-del" onclick="deleteUserAccount('${u.username}')" title="Delete Account">
+        🗑
+      </button>
+    `;
+
+    return `
+      <tr>
+        <td><strong>${u.username}</strong></td>
+        <td>${u.name || "—"}</td>
+        <td>${roleBadge}</td>
+        <td>${u.dept || "—"}</td>
+        <td>${u.specialization || "—"}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="action-btns">
+            ${toggleAction}
+            ${roleAction}
+            <button class="btn-sm btn-pwd-reset" onclick="openResetPasswordModal('${u.username}')" title="Reset Password">
+              🔑 Reset
+            </button>
+            ${deleteAction}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function toggleUserStatus(username, currentStatus) {
+  const newStatus = currentStatus === "active" ? "disabled" : "active";
+  if (!confirm(`Are you sure you want to set account '${username}' to ${newStatus.toUpperCase()}?`)) return;
+
+  try {
+    const res = await fetch(`/api/platform-admin/users/${encodeURIComponent(username)}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        admin_username: currentAdminUser.username,
+        status: newStatus,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Could not update status.");
+    showToast(data.message || `Account ${username} is now ${newStatus}.`);
+    loadUsers();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+function openCreateUserModal() {
+  document.getElementById("new-user-username").value = "";
+  document.getElementById("new-user-name").value = "";
+  document.getElementById("new-user-password").value = "";
+  document.getElementById("new-user-dept").value = "";
+  document.getElementById("new-user-role").value = "employee";
+  toggleSpecField();
+  openModal("create-user-modal");
+}
+
+async function submitCreateUser(e) {
+  e.preventDefault();
+  const role = document.getElementById("new-user-role").value;
+  const username = document.getElementById("new-user-username").value.trim();
+  const name = document.getElementById("new-user-name").value.trim();
+  const password = document.getElementById("new-user-password").value;
+  const dept = document.getElementById("new-user-dept").value.trim();
+  const spec = role === "tech" ? document.getElementById("new-user-spec").value : null;
+
+  try {
+    const res = await fetch("/api/platform-admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        admin_username: currentAdminUser.username,
+        username,
+        name,
+        password,
+        role,
+        dept,
+        specialization: spec,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Could not create user account.");
+    showToast(`Account '${username}' created successfully.`);
+    closeModal("create-user-modal");
+    loadUsers();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+function openRoleModal(username, currentRole, currentSpec) {
+  document.getElementById("edit-role-username").value = username;
+  document.getElementById("edit-role-user-display").value = username;
+  document.getElementById("edit-role-select").value = currentRole;
+  if (currentSpec) document.getElementById("edit-role-spec").value = currentSpec;
+  toggleEditSpecField();
+  openModal("edit-role-modal");
+}
+
+async function submitRoleChange(e) {
+  e.preventDefault();
+  const username = document.getElementById("edit-role-username").value;
+  const role = document.getElementById("edit-role-select").value;
+  const spec = role === "tech" ? document.getElementById("edit-role-spec").value : null;
+
+  try {
+    const res = await fetch(`/api/platform-admin/users/${encodeURIComponent(username)}/role`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        admin_username: currentAdminUser.username,
+        role,
+        specialization: spec,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Could not update user role.");
+    showToast(data.message || `Role updated for ${username}.`);
+    closeModal("edit-role-modal");
+    loadUsers();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+function openResetPasswordModal(username, requestId = null) {
+  document.getElementById("reset-pwd-username").value = username;
+  document.getElementById("reset-pwd-user-display").value = username;
+  document.getElementById("reset-pwd-request-id").value = requestId || "";
+  document.getElementById("reset-pwd-new").value = "";
+  openModal("reset-pwd-modal");
+}
+
+async function submitPasswordReset(e) {
+  e.preventDefault();
+  const username = document.getElementById("reset-pwd-username").value;
+  const newPassword = document.getElementById("reset-pwd-new").value;
+  const requestId = document.getElementById("reset-pwd-request-id").value || null;
+
+  try {
+    const res = await fetch(`/api/platform-admin/users/${encodeURIComponent(username)}/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        admin_username: currentAdminUser.username,
+        new_password: newPassword,
+        request_id: requestId,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Could not reset password.");
+    showToast(`Password for '${username}' was reset successfully.`);
+    closeModal("reset-pwd-modal");
+    loadResetRequests();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+async function deleteUserAccount(username) {
+  if (!confirm(`CAUTION: Permanently delete account '${username}' and its records?`)) return;
+
+  try {
+    const res = await fetch(`/api/platform-admin/users/${encodeURIComponent(username)}?admin_username=${encodeURIComponent(currentAdminUser.username)}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Could not delete user account.");
+    showToast(`Account '${username}' has been deleted.`);
+    loadUsers();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+// ── Reset Requests ──
+async function loadResetRequests() {
+  const tbody = document.getElementById("resets-tbody");
+  try {
+    const res = await fetch(`/api/platform-admin/reset-requests?admin_username=${encodeURIComponent(currentAdminUser.username)}`);
+    if (!res.ok) throw new Error("Could not fetch reset requests.");
+    const requests = await res.json();
+
+    if (requests.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-dim);">No password reset recovery requests found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = requests.map(r => `
+      <tr>
+        <td><code>#${r.id || "—"}</code></td>
+        <td><strong>${r.username}</strong></td>
+        <td><span class="badge badge-${r.role}">${r.role}</span></td>
+        <td>${r.note || "Self-service recovery"}</td>
+        <td>${(r.requested_at || "").replace("T"," ").slice(0,19)}</td>
+        <td><span class="badge badge-${r.status==='completed'?'active':'disabled'}">${r.status}</span></td>
+        <td>
+          ${r.status === 'pending' ? `
+            <button class="btn-sm btn-pwd-reset" onclick="openResetPasswordModal('${r.username}', '${r.id}')">
+              Approve & Reset
+            </button>
+          ` : `<span style="color:var(--text-dim); font-size:0.75rem;">Resolved</span>`}
+        </td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+// ── Audit Telemetry ──
+async function loadAuditTelemetry() {
+  const tbody = document.getElementById("audit-tbody");
+  try {
+    const res = await fetch(`/api/platform-admin/audit?admin_username=${encodeURIComponent(currentAdminUser.username)}`);
+    if (!res.ok) throw new Error("Could not fetch audit telemetry.");
+    const data = await res.json();
+
+    document.getElementById("stat-total-users").textContent = data.users?.total ?? "—";
+    document.getElementById("stat-platform-admins").textContent = data.users?.by_role?.platform_admin ?? "1";
+    document.getElementById("stat-active-tickets").textContent = data.tickets?.open ?? "0";
+    document.getElementById("stat-db-status").textContent = data.database?.connected ? "Connected (Live)" : "Offline";
+
+    const logs = data.audit_logs || [];
+    tbody.innerHTML = logs.map(l => `
+      <tr>
+        <td><strong>${l.event}</strong></td>
+        <td><code>${l.actor}</code></td>
+        <td><span class="badge badge-active">${l.severity}</span></td>
+        <td>${(l.timestamp||"").replace("T"," ").slice(0,19)}</td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+// Initial load
+loadUsers();
+</script>
+</body>
+</html>

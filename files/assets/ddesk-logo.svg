@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="dGrad" x1="15" y1="15" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="45%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+    <filter id="dGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#a855f7" flood-opacity="0.45"/>
+    </filter>
+    <linearGradient id="bubbleGrad" x1="42" y1="36" x2="78" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#581c87"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer Stylized D -->
+  <path d="M 22 22 C 22 16.48 26.48 12 32 12 L 64 12 C 85.54 12 103 29.46 103 51 C 103 72.54 85.54 90 64 90 L 32 90 C 26.48 90 22 85.52 22 80 Z" 
+        fill="url(#dGrad)" filter="url(#dGlow)"/>
+  
+  <!-- Inner Cutout of D -->
+  <path d="M 38 27 L 62 27 C 75.25 27 86 37.75 86 51 C 86 64.25 75.25 75 62 75 L 38 75 Z" 
+        fill="#050713"/>
+  
+  <!-- Chat Bubble inside Counter -->
+  <g id="chat-bubble-core">
+    <!-- Bubble Body -->
+    <rect x="44" y="37" width="34" height="26" rx="9" fill="url(#bubbleGrad)" stroke="#c084fc" stroke-width="1.8"/>
+    <!-- Tail -->
+    <path d="M 50 62 L 44 69 L 57 63 Z" fill="#3b0764" stroke="#c084fc" stroke-width="1.5" stroke-linejoin="round"/>
+    <!-- Two Chat Dots -->
+    <circle cx="54" cy="50" r="2.8" fill="#ffffff"/>
+    <circle cx="66" cy="50" r="2.8" fill="#ffffff"/>
+  </g>
+</svg>

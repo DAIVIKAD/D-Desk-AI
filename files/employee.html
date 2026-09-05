@@ -4,42 +4,60 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D Desk AI — Employee Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-deep:#04060f; --bg-mid:#080d1e;
-    --neon-blue:#00d4ff; --neon-green:#00ff88; --neon-red:#ff4466;
-    --text-bright:#e8f4ff; --text-dim:#6a8aaa;
-    --border-glow:rgba(0,212,255,0.2); --glass-bg:rgba(8,15,35,0.7);
-    --card-bg:rgba(10,18,42,0.8);
+    --bg-deep: #050713;
+    --bg-mid: #0b0f24;
+    --primary-purple: #9333ea;
+    --primary-violet: #a855f7;
+    --brand-glow: #c084fc;
+    --neon-blue: #38bdf8;
+    --neon-green: #34d399;
+    --neon-amber: #fbbf24;
+    --neon-red: #f87171;
+    --text-bright: #ffffff;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --border-glow: rgba(139, 92, 246, 0.22);
+    --glass-bg: rgba(13, 18, 40, 0.85);
+    --card-bg: rgba(13, 18, 40, 0.75);
+    --card-hover-border: rgba(168, 85, 247, 0.55);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Exo 2',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-deep);color:var(--text-bright);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
 
   /* Top nav */
   .topbar{
     display:flex;align-items:center;justify-content:space-between;
-    padding:0.8rem 1.8rem;
-    background:rgba(4,8,20,0.9);
+    padding:0.85rem 2rem;
+    background:rgba(9, 13, 30, 0.95);
     border-bottom:1px solid var(--border-glow);
     backdrop-filter:blur(20px);
     z-index:50; position:relative;
     flex-shrink:0;
   }
-  .topbar-brand{display:flex;align-items:center;gap:0.8rem;}
-  .topbar-brand svg{width:28px;height:28px;}
-  .topbar-title{font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;color:var(--neon-blue);}
-  .topbar-right{display:flex;align-items:center;gap:1.5rem;}
+  .topbar-brand{display:flex;align-items:center;gap:0.75rem;text-decoration:none;}
+  .topbar-logo-icon{
+    width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg, #7c3aed, #c084fc);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 0 15px rgba(168,85,247,0.45);
+  }
+  .topbar-title{font-size:1.05rem;font-weight:800;letter-spacing:-0.01em;color:#fff;}
+  .topbar-title .ai-tag{color:var(--brand-glow);}
+  .portal-pill{font-size:0.68rem;font-weight:700;color:var(--neon-blue);background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);padding:0.2rem 0.6rem;border-radius:9999px;margin-left:0.5rem;text-transform:uppercase;letter-spacing:0.04em;}
+  .topbar-right{display:flex;align-items:center;gap:1.2rem;}
   .user-badge{
     display:flex;align-items:center;gap:0.6rem;
-    background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);
-    border-radius:30px;padding:0.4rem 1rem;font-size:0.75rem;
-    font-family:'Share Tech Mono',monospace;color:var(--neon-blue);
+    background:rgba(13,18,40,0.85);border:1px solid var(--border-glow);
+    border-radius:9999px;padding:0.4rem 1rem;font-size:0.75rem;
+    color:var(--text-bright);font-weight:600;
   }
-  .user-dot{width:7px;height:7px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 6px var(--neon-green);animation:pulse-dot 2s infinite;}
+  .user-dot{width:7px;height:7px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 8px var(--neon-green);animation:pulse-dot 2s infinite;}
   @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
-  .btn-logout{background:none;border:1px solid rgba(255,68,102,0.3);color:rgba(255,68,102,0.7);padding:0.35rem 0.9rem;border-radius:6px;font-size:0.7rem;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.2s;}
-  .btn-logout:hover{border-color:#ff4466;color:#ff4466;}
+  .btn-logout{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:0.4rem 0.95rem;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+  .btn-logout:hover{background:rgba(239,68,68,0.2);border-color:#ef4444;box-shadow:0 0 15px rgba(239,68,68,0.3);}
 
   /* Layout */
   .main-layout{display:flex;flex:1;overflow:hidden;}
@@ -538,6 +556,46 @@
   }
   .comment-submit:hover{background:rgba(0,212,255,0.2);box-shadow:0 0 12px rgba(0,212,255,0.2);}
   .comment-submit:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* ═══ RESPONSIVE MOBILE TWEAKS ═══ */
+  .menu-toggle-btn {
+    display: none;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-glow);
+    color: var(--text-bright);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-right: 0.6rem;
+  }
+
+  @media (max-width: 900px) {
+    .menu-toggle-btn { display: flex; }
+    .sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 0;
+      width: 250px;
+      z-index: 150;
+      background: rgba(9, 13, 30, 0.98);
+      backdrop-filter: blur(25px);
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 10px 0 30px rgba(0,0,0,0.7);
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    .topbar { padding: 0.75rem 1rem; }
+    .topbar-right { gap: 0.8rem; }
+    .user-badge span { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chat-area { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -546,18 +604,28 @@
 
 <!-- Top Bar -->
 <div class="topbar">
-  <div class="topbar-brand">
-    <svg viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="14" r="8" stroke="#00d4ff" stroke-width="1.2" stroke-dasharray="3 2"/>
-      <circle cx="14" cy="14" r="3" fill="#00d4ff" opacity="0.8"/>
-      <line x1="14" y1="6" x2="14" y2="11" stroke="#00ff88" stroke-width="1.2"/>
-      <line x1="6" y1="14" x2="11" y2="14" stroke="#00d4ff" stroke-width="1.2"/>
-    </svg>
-    <div class="topbar-title">D Desk AI</div>
+  <div style="display:flex;align-items:center;">
+    <button class="menu-toggle-btn" onclick="toggleMobileSidebar()" title="Toggle Navigation">☰</button>
+    <a href="index.html" class="topbar-brand">
+      <div class="topbar-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 120 120" fill="none">
+          <path d="M 22 22 C 22 16.48 26.48 12 32 12 L 64 12 C 85.54 12 103 29.46 103 51 C 103 72.54 85.54 90 64 90 L 32 90 C 26.48 90 22 85.52 22 80 Z" fill="#ffffff"/>
+          <path d="M 38 27 L 62 27 C 75.25 27 86 37.75 86 51 C 86 64.25 75.25 75 62 75 L 38 75 Z" fill="#7c3aed"/>
+          <rect x="44" y="37" width="34" height="26" rx="9" fill="#3b0764" stroke="#ffffff" stroke-width="1.8"/>
+          <circle cx="54" cy="50" r="3" fill="#ffffff"/>
+          <circle cx="66" cy="50" r="3" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="topbar-title">D Desk <span class="ai-tag">Ai</span></div>
+      <span class="portal-pill">Employee</span>
+    </a>
   </div>
   <div class="topbar-right">
-    <div class="user-badge"><div class="user-dot"></div><span id="user-name">EMP001</span></div>
-    <button class="btn-logout" onclick="window.location='index.html'">LOGOUT</button>
+    <div class="user-badge">
+      <div class="user-dot"></div>
+      <span id="user-display">—</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Exit Portal</button>
   </div>
 </div>
 
@@ -590,7 +658,7 @@
   <div class="chat-area">
     <div class="assistant-section">
     <div class="chat-header">
-      <div class="ai-avatar">🤖<div class="ai-status"></div></div>
+      <div class="ai-avatar"><img src="/assets/logo-icon.png" alt="AI Assistant" style="width:100%;height:100%;border-radius:12px;object-fit:cover;"><div class="ai-status"></div></div>
       <div class="chat-header-info">
         <h3>D Desk AI Assistant</h3>
         <p>Powered by Groq / LLaMA 3.1 — Always learning</p>
@@ -703,16 +771,31 @@
 <div class="powered-footer">Powered by Daivik Software Solutions</div>
 
 <script>
+function logout() {
+  sessionStorage.clear();
+  window.location.href = 'index.html';
+}
+
+function toggleMobileSidebar() {
+  document.querySelector('.sidebar')?.classList.toggle('open');
+}
+
 const currentRole = sessionStorage.getItem('nd_role');
 if(currentRole !== 'employee') {
-  window.location = 'index.html';
+  window.location.href = 'index.html';
 }
 
 const employeeId = sessionStorage.getItem('nd_user') || 'emp001';
 const employeeName = sessionStorage.getItem('nd_name') || employeeId.toUpperCase();
 const employeeDept = sessionStorage.getItem('nd_dept') || '';
-document.getElementById('user-name').textContent = employeeName.toUpperCase();
-document.getElementById('ticket-location').value = employeeDept;
+const userDisplayEl = document.getElementById('user-display') || document.getElementById('user-name');
+if (userDisplayEl) {
+  userDisplayEl.textContent = employeeName.toUpperCase();
+}
+const locEl = document.getElementById('ticket-location');
+if (locEl) {
+  locEl.value = employeeDept;
+}
 
 let awaitingFixConfirmation = false;
 let pendingDraft = null;
